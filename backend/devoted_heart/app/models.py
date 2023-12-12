@@ -1,7 +1,5 @@
 from django.db import models
 
-from core.exceptions import EmptyModelError
-
 
 class FAQ(models.Model):
     """Часто задаваемый вопрос."""
@@ -52,7 +50,8 @@ class Customer(models.Model):
         unique=True,
         verbose_name='telegram id',
         help_text='telegram id',
-        default='',
+        blank=False,
+        null=False,
     )
     name = models.CharField(
         max_length=254,
@@ -60,15 +59,6 @@ class Customer(models.Model):
         help_text='Имя',
         default='',
     )
-
-    def save(self, *args, **kwargs) -> None:
-        """Не сохраняем пустую модель."""
-        if (
-            self.email == '' and self.phone == '' and
-            self.tg_id == '' and self.name == ''
-        ):
-            raise EmptyModelError()
-        return super(self).save(*args, **kwargs)
 
     class Meta:
         ordering = ('id', )

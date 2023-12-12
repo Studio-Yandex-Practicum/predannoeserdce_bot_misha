@@ -26,19 +26,7 @@ class FAQSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     """Сериализатор для модели клиентов."""
 
-    def validate(self, data):
-        """Валидация клиента."""
-        # Не допускаем всех пустых полей
-        if (
-            data.get('email', '') == '' and
-            data.get('phone', '') == '' and
-            data.get('tg_id', '') == '' and
-            data.get('name', '') == ''
-        ):
-            raise serializers.ValidationError(
-                'Хотя бы одно из полей необходимо заполнить.'
-            )
-        return data
+    lookup_field = 'tg_id'
 
     class Meta:
         model = Customer
