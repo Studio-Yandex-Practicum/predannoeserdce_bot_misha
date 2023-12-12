@@ -44,3 +44,4 @@ class CustomerVewset(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'tg_id'
