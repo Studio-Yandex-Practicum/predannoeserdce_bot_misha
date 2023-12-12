@@ -1,53 +1,19 @@
-﻿import logging
-import asyncio
-
-from telegram import Update
+﻿from constants import TELEGRAM_TOKEN
+from handlers import alert_message, handle_menu_buttons, show_menu_btn, start
 from telegram.ext import (
-    ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters,
-)
-from constants import TELEGRAM_TOKEN
-from message_config import MESSAGES
-
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    filters,
 )
 
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Отвечает пользователю на команду /start."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=MESSAGES['start']
-    )
-    await asyncio.sleep(3)
-    await menu(update, context)
-
-
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обрабатывает команды основного меню."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=MESSAGES['menu']
-    )
-
-
-async def alert_message(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Отвечает пользователю на попытку отправить неподдерживаемый контент."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=MESSAGES['alert_message']
-    )
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     handlers = [
-        CommandHandler('start', start),
-        CommandHandler('menu', menu),
-        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message)
+        CommandHandler("start", start),
+        CommandHandler("menu", show_menu_btn),
+        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message),
+        MessageHandler((filters.TEXT), handle_menu_buttons),
     ]
     for handler in handlers:
         application.add_handler(handler)
