@@ -6,6 +6,7 @@ from telegram.ext import (
     ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters,
 )
 from constants import TELEGRAM_TOKEN
+from handlers.FAQ import conv_handler
 from message_config import MESSAGES
 
 
@@ -47,7 +48,8 @@ if __name__ == '__main__':
     handlers = [
         CommandHandler('start', start),
         CommandHandler('menu', menu),
-        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message)
+        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message),
+        conv_handler
     ]
     for handler in handlers:
         application.add_handler(handler)
