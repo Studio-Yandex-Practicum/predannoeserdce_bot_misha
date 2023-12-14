@@ -7,7 +7,7 @@ from telegram import (
 )
 
 from constants import LINK_ITEMS, MENU_ITEMS, MENU_LAYOUT
-from message_config import MESSAGES, LogMessage
+from message_config import LogMessage, PlaceholderMessage
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -17,7 +17,7 @@ async def get_menu_button() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text="МЕНЮ")]],
         resize_keyboard=True,
-        input_field_placeholder=MESSAGES["menu_btn"],
+        input_field_placeholder=PlaceholderMessage.MENU_BTN,
     )
 
 
@@ -38,7 +38,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True,
-        input_field_placeholder="Выберите пункт меню",
+        input_field_placeholder=PlaceholderMessage.MAIN_MENU,
         one_time_keyboard=True,
     )
 

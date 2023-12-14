@@ -25,3 +25,8 @@ class LogMessage:
     UNKNOWN_ERROR = "Что-то пошло не так! Ошибка: %s"
     SERVER_ERROR = "Ошибка получения данных с сервера: %s"
     UPDATE_FAQ_LIST = "Список частых вопросов обновлён"
+
+
+class PlaceholderMessage:
+    MENU_BTN = "Нажмите кнопку для входа в меню"
+    MAIN_MENU = "Выберите пункт меню"
