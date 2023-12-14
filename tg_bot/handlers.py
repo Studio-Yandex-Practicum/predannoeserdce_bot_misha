@@ -60,11 +60,15 @@ async def handle_menu_buttons(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Обрабатывает нажатие кнопок меню."""
-    if update.message.text in list(MENU_ITEMS.keys()):
-        await globals()[MENU_ITEMS[update.message.text]](update, context)
-    elif update.message.text in list(LINK_ITEMS.keys()):
+    menu_keys = list(key.lower() for key in MENU_ITEMS.keys())
+    link_keys = list(key.lower() for key in LINK_ITEMS.keys())
+    if update.message.text.lower() in menu_keys:
+        await globals()[MENU_ITEMS[update.message.text.lower()]](
+            update, context
+        )
+    elif update.message.text.lower() in link_keys:
         await handle_url_button(update=update, context=context)
-    elif update.message.text == "МЕНЮ":
+    elif update.message.text.lower() == "меню":
         await handle_show_main_menu(update=update, context=context)
     else:
         await handle_alert_message(update=update, context=context)
@@ -81,7 +85,7 @@ async def handle_url_button(
         chat_id=update.effective_chat.id,
         text="Нажмите на кнопку, чтобы перейди на сайт.",
         reply_markup=await kb.get_url_button(
-            btn_attrs=LINK_ITEMS[update.message.text],
+            btn_attrs=LINK_ITEMS[update.message.text.lower()],
         ),
     )
     bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))

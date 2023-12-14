@@ -16,23 +16,23 @@ LOGGING_LEVEL = logging.INFO
 
 # Кнопки меню
 MENU_ITEMS: dict[str, str] = {
-    "Частые вопросы": "faq",
-    "Подписаться на рассылку": "subscribe",
+    "частые вопросы": "faq",
+    "подписаться на рассылку": "subscribe",
 }
 LINK_ITEMS: dict[str, LinkButtonAttributes] = {
-    "Попечительство": LinkButtonAttributes(
+    "попечительство": LinkButtonAttributes(
         text="Условия попечительства можно посмотреть на сайте",
         url="https://predannoeserdce.ru/programmy-prijuta/popechitelstvo/",
     ),
-    "Пожертвование": LinkButtonAttributes(
+    "пожертвование": LinkButtonAttributes(
         text="Сделать пожертвование можно перейдя по ссылке",
         url="https://predannoeserdce.ru/help/",
     ),
-    "Взять котика": LinkButtonAttributes(
+    "взять котика": LinkButtonAttributes(
         text="Взять котика домой можно по ссылке",
         url="https://predannoeserdce.ru/howtohelp/take-home/",
     ),
-    "Посмотреть котиков": LinkButtonAttributes(
+    "посмотреть котиков": LinkButtonAttributes(
         text="Посмотреть котиков можно по ссылке",
         url="https://predannoeserdce.ru/catalog-opeka/",
     ),

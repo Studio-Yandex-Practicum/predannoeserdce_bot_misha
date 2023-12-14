@@ -31,7 +31,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
         for _ in range(MENU_LAYOUT):
             if btn_idx == len(btn_list):
                 break
-            row.append(KeyboardButton(text=btn_list[btn_idx]))
+            row.append(KeyboardButton(text=btn_list[btn_idx].capitalize()))
             btn_idx += 1
         keyboard.append(row)
     bot_logger.info(msg=LogMessage.CREATE_MAIN_KB)
