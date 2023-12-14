@@ -2,6 +2,7 @@
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     MessageHandler,
@@ -11,6 +12,7 @@ from telegram.ext import (
 from constants import MINUTES_FAQ_UPDATE_INTERVAL, START_SLEEP, TELEGRAM_TOKEN
 from handlers import (
     handle_alert_message,
+    handle_faq_callback,
     handle_menu_buttons,
     handle_show_main_menu,
     update_faq,
@@ -47,6 +49,7 @@ if __name__ == "__main__":
             callback=handle_alert_message,
         ),
         MessageHandler(filters=(filters.TEXT), callback=handle_menu_buttons),
+        CallbackQueryHandler(callback=handle_faq_callback),
     ]
     for handler in handlers:
         application.add_handler(handler=handler)

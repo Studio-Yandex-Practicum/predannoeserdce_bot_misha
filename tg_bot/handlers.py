@@ -117,3 +117,15 @@ async def subscribe(
         text=LogMessage.STUB_BTN % (update.message.text,),
     )
     await handle_show_main_menu(update=update, context=context, delay=1),
+
+
+async def handle_faq_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    query = update.callback_query
+    order = query.data
+    if order == "main_menu":
+        await handle_show_main_menu(update=update, context=context)
+    if order == "custom_question":
+        pass
+    await query.answer()
