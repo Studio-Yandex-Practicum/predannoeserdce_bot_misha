@@ -4,6 +4,7 @@ import requests
 from requests import Response
 
 from constants import SERVER_API_FAQ_URL
+from message_config import LogMessage
 from settings import bot_logger
 
 
@@ -14,10 +15,10 @@ def get_faq() -> dict:
         try:
             response: Response = requests.get(url=url)
         except Exception as error:
-            bot_logger.error(msg=f"Что-то пошло не так! Ошибка: {error}")
+            bot_logger.error(msg=LogMessage.UNKNOWN_ERROR % (error,))
         if response.status_code != HTTPStatus.OK:
             bot_logger.error(
-                f"Ошибка получения данных с сервера: {response.status_code}"
+                msg=LogMessage.SERVER_ERROR % (response.status_code,)
             )
             return {
                 "Ошибка. Нажмите, "

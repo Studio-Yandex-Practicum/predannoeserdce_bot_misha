@@ -7,7 +7,7 @@ from telegram import (
 )
 
 from constants import LINK_ITEMS, MENU_ITEMS, MENU_LAYOUT
-from message_config import MESSAGES
+from message_config import MESSAGES, LogMessage
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -34,7 +34,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
             row.append(KeyboardButton(text=btn_list[btn_idx]))
             btn_idx += 1
         keyboard.append(row)
-    bot_logger.info(msg="Создана основная клавиатура")
+    bot_logger.info(msg=LogMessage.CREATE_MAIN_KB)
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True,
@@ -45,7 +45,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
 
 async def remove_menu() -> ReplyKeyboardRemove:
     """Удаляет клавиатуру."""
-    bot_logger.info(msg="Клавиатура удалена")
+    bot_logger.info(msg=LogMessage.REMOVE_KB)
     return ReplyKeyboardRemove()
 
 
@@ -88,5 +88,5 @@ async def get_faq_menu(faq_questions: list) -> InlineKeyboardMarkup:
             )
         ]
     )
-    bot_logger.info(msg="Создана клавиатура частых вопросов")
+    bot_logger.info(msg=LogMessage.CREATE_FAQ_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

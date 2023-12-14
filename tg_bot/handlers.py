@@ -4,54 +4,50 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 import keyboards as kb
-from constants import LINK_ITEMS, MENU_ITEMS, MENU_SLEEP, START_SLEEP
-from message_config import MESSAGES
+from constants import LINK_ITEMS, MENU_ITEMS, MENU_SLEEP
+from message_config import MESSAGES, LogMessage
 from requests_db import get_faq
 from settings import bot_logger
 
 
-def update_faq_list() -> None:
+def update_faq() -> None:
     """Обновляет список частых вопросов."""
-    global faq_list
-    faq_list = get_faq()
-    bot_logger.info(msg="Список частых вопросов обновлён")
+    global faq_dict
+    faq_dict = get_faq()
+    bot_logger.info(msg=LogMessage.UPDATE_FAQ_LIST)
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Отвечает пользователю на команду /start."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=MESSAGES["start"]
-    )
-    await show_menu_btn(update=update, context=context, delay=START_SLEEP)
+# async def handle_show_menu_btn(
+#     update: Update, context: ContextTypes.DEFAULT_TYPE, delay: int | None
+# ) -> None:
+#     """Показывает кнопку вызова основного меню."""
+#     if delay:
+#         await asyncio.sleep(delay=delay)
+#     await context.bot.send_message(
+#         chat_id=update.effective_chat.id,
+#         text=MESSAGES["menu_btn"],
+#         reply_markup=await kb.get_menu_button(),
+#     )
+#     bot_logger.info(msg=LogMessage.SHOW_MENU_BTN)
 
 
-async def show_menu_btn(
-    update: Update, context: ContextTypes.DEFAULT_TYPE, delay: int | None
-) -> None:
-    """Показывает кнопку вызова основного меню."""
-    if delay:
-        await asyncio.sleep(delay=delay)
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=MESSAGES["menu_btn"],
-        reply_markup=await kb.get_menu_button(),
-    )
-    bot_logger.info(msg="Показана кнопка вызова главного меню")
-
-
-async def show_main_menu(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+async def handle_show_main_menu(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    delay: int | None = None,
 ) -> None:
     """Показывает основное меню."""
+    if delay:
+        await asyncio.sleep(delay=delay)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=MESSAGES["menu"],
         reply_markup=await kb.get_main_menu(),
     )
-    bot_logger.info(msg="Показано главное меню")
+    bot_logger.info(msg=LogMessage.SHOW_MAIN_MENU)
 
 
-async def alert_message(
+async def handle_alert_message(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Отвечает пользователю на попытку отправить неподдерживаемый контент."""
@@ -67,14 +63,31 @@ async def handle_menu_buttons(
     if update.message.text in list(MENU_ITEMS.keys()):
         await globals()[MENU_ITEMS[update.message.text]](update, context)
     elif update.message.text in list(LINK_ITEMS.keys()):
-        await url_button_click(update=update, context=context)
+        await handle_url_button(update=update, context=context)
     elif update.message.text == "МЕНЮ":
-        await show_main_menu(update=update, context=context)
+        await handle_show_main_menu(update=update, context=context)
     else:
-        await alert_message(update=update, context=context)
+        await handle_alert_message(update=update, context=context)
         bot_logger.info(
-            msg=f"Прислано необрабатываемое сообщение: {update.message.text}"
+            msg=LogMessage.UNKNOWN_MESSAGE % (update.message.text,)
         )
+
+
+async def handle_url_button(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Обрабатывает нажатие кнопки с переходом на сайт."""
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Нажмите на кнопку, чтобы перейди на сайт.",
+        reply_markup=await kb.get_url_button(
+            btn_attrs=LINK_ITEMS[update.message.text],
+        ),
+    )
+    bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))
+    await handle_show_main_menu(
+        update=update, context=context, delay=MENU_SLEEP
+    )
 
 
 async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -87,24 +100,9 @@ async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Выберите вопрос, который вас интересует:",
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_list),
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_dict),
     )
-    bot_logger.info(msg="Обработка кнопки `Частые вопросы`")
-
-
-async def url_button_click(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Обрабатывает нажатие кнопки с переходом на сайт."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Нажмите на кнопку, чтобы перейди на сайт.",
-        reply_markup=await kb.get_url_button(
-            btn_attrs=LINK_ITEMS[update.message.text],
-        ),
-    )
-    bot_logger.info(msg=f"Обработка кнопки `{update.message.text}`")
-    await show_menu_btn(update=update, context=context, delay=MENU_SLEEP)
+    bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))
 
 
 async def subscribe(
@@ -112,7 +110,6 @@ async def subscribe(
 ) -> None:
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Здесь должна быть обработка "
-        "подписки на рассылку, но её пока нет",
+        text=LogMessage.STUB_BTN % (update.message.text,),
     )
-    await show_menu_btn(update=update, context=context, delay=1),
+    await handle_show_main_menu(update=update, context=context, delay=1),
