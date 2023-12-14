@@ -7,18 +7,18 @@ from utils import LinkButtonAttributes
 
 load_dotenv()
 
-
+# Константы для телеграма
 TELEGRAM_TOKEN = os.getenv(key="TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv(key="ADMIN_CHAT_ID")
 
+# Уровень логгера
 LOGGING_LEVEL = logging.INFO
 
+# Кнопки меню
 MENU_ITEMS: dict[str, str] = {
     "Частые вопросы": "faq",
     "Подписаться на рассылку": "subscribe",
 }
-
-
 LINK_ITEMS: dict[str, LinkButtonAttributes] = {
     "Попечительство": LinkButtonAttributes(
         text="Условия попечительства можно посмотреть на сайте",
@@ -37,12 +37,12 @@ LINK_ITEMS: dict[str, LinkButtonAttributes] = {
         url="https://predannoeserdce.ru/catalog-opeka/",
     ),
 }
-
 MENU_LAYOUT = 3
 
+# Задержки
 START_SLEEP = 3
 MENU_SLEEP = 5
 
-SERVER_API_FAQ_URL = "http://84.201.129.17:8000/api/faq/"
-
+# Получение и обновление списка вопросов
+SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")
 MINUTES_FAQ_UPDATE_INTERVAL = 10
