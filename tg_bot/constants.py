@@ -45,4 +45,4 @@ MENU_SLEEP = 5
 
 # Получение и обновление списка вопросов
 SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")
-MINUTES_FAQ_UPDATE_INTERVAL = 10
+FAQ_UPDATE_INTERVAL_MINUTES = 10

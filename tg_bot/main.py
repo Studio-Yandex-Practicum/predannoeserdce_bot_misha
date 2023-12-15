@@ -9,7 +9,7 @@ from telegram.ext import (
     filters,
 )
 
-from constants import MINUTES_FAQ_UPDATE_INTERVAL, START_SLEEP, TELEGRAM_TOKEN
+from constants import FAQ_UPDATE_INTERVAL_MINUTES, START_SLEEP, TELEGRAM_TOKEN
 from handlers import (
     handle_alert_message,
     handle_faq_callback,
@@ -23,7 +23,7 @@ scheduller = AsyncIOScheduler()
 scheduller.add_job(
     func=update_faq,
     trigger="interval",
-    minutes=MINUTES_FAQ_UPDATE_INTERVAL,
+    minutes=FAQ_UPDATE_INTERVAL_MINUTES,
 )
 scheduller.start()
 update_faq()
