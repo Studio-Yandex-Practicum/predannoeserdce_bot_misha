@@ -7,7 +7,7 @@ from telegram import (
 )
 
 from constants import LINK_ITEMS, MENU_ITEMS, MENU_LAYOUT
-from message_config import LogMessage, PlaceholderMessage
+from message_config import InlineButtonText, LogMessage, PlaceholderMessage
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -75,18 +75,11 @@ async def get_faq_menu(faq_questions: list) -> InlineKeyboardMarkup:
     keyboard.append(
         [
             InlineKeyboardButton(
-                text="Задать другой вопрос администратору",
+                text=InlineButtonText.CUSTOM_QUESTION,
                 callback_data="custom_question",
             )
         ]
-    ),
-    keyboard.append(
-        [
-            InlineKeyboardButton(
-                text="Вернуться в главное меню",
-                callback_data="main_menu",
-            )
-        ]
     )
+
     bot_logger.info(msg=LogMessage.CREATE_FAQ_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
