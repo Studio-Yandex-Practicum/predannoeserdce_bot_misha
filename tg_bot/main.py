@@ -1,54 +1,56 @@
-﻿import logging
-import asyncio
-
+﻿from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update
 from telegram.ext import (
-    ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters,
+    ApplicationBuilder,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
 )
-from constants import TELEGRAM_TOKEN
+
+from constants import FAQ_UPDATE_INTERVAL_MINUTES, START_SLEEP, TELEGRAM_TOKEN
+from handlers import (
+    handle_alert_message,
+    handle_faq_callback,
+    handle_menu_buttons,
+    handle_show_main_menu,
+    update_faq,
+)
 from message_config import MESSAGES
 
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+scheduller = AsyncIOScheduler()
+scheduller.add_job(
+    func=update_faq,
+    trigger="interval",
+    minutes=FAQ_UPDATE_INTERVAL_MINUTES,
 )
+scheduller.start()
+update_faq()
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Отвечает пользователю на команду /start."""
     await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=MESSAGES['start']
+        chat_id=update.effective_chat.id, text=MESSAGES["start"]
     )
-    await asyncio.sleep(3)
-    await menu(update, context)
-
-
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обрабатывает команды основного меню."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=MESSAGES['menu']
+    await handle_show_main_menu(
+        update=update, context=context, delay=START_SLEEP
     )
 
 
-async def alert_message(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Отвечает пользователю на попытку отправить неподдерживаемый контент."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=MESSAGES['alert_message']
-    )
-
-
-if __name__ == '__main__':
-    application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+if __name__ == "__main__":
+    application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
     handlers = [
-        CommandHandler('start', start),
-        CommandHandler('menu', menu),
-        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message)
+        CommandHandler(command="start", callback=start),
+        CommandHandler(command="menu", callback=handle_show_main_menu),
+        MessageHandler(
+            filters=(filters.AUDIO | filters.PHOTO),
+            callback=handle_alert_message,
+        ),
+        MessageHandler(filters=(filters.TEXT), callback=handle_menu_buttons),
+        CallbackQueryHandler(callback=handle_faq_callback),
     ]
     for handler in handlers:
-        application.add_handler(handler)
+        application.add_handler(handler=handler)
     application.run_polling()
