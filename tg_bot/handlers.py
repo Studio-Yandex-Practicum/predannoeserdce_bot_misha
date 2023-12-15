@@ -17,18 +17,20 @@ def update_faq() -> None:
     bot_logger.info(msg=LogMessage.UPDATE_FAQ_LIST)
 
 
-# async def handle_show_menu_btn(
-#     update: Update, context: ContextTypes.DEFAULT_TYPE, delay: int | None
-# ) -> None:
-#     """Показывает кнопку вызова основного меню."""
-#     if delay:
-#         await asyncio.sleep(delay=delay)
-#     await context.bot.send_message(
-#         chat_id=update.effective_chat.id,
-#         text=MESSAGES["menu_btn"],
-#         reply_markup=await kb.get_menu_button(),
-#     )
-#     bot_logger.info(msg=LogMessage.SHOW_MENU_BTN)
+async def handle_show_menu_btn(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    delay: int | None = None,
+) -> None:
+    """Показывает кнопку вызова основного меню."""
+    if delay:
+        await asyncio.sleep(delay=delay)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=MESSAGES["menu_btn"],
+        reply_markup=await kb.get_menu_button(),
+    )
+    bot_logger.info(msg=LogMessage.SHOW_MENU_BTN)
 
 
 async def handle_show_main_menu(
@@ -96,17 +98,18 @@ async def handle_url_button(
 
 async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обрабатывает нажатие кнопки `Частые вопросы`."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Что вы хотите узнать?",
-        reply_markup=await kb.remove_menu(),
-    )
+    # await context.bot.send_message(
+    #     chat_id=update.effective_chat.id,
+    #     text="Что вы хотите узнать?",
+    #     reply_markup=await kb.remove_menu(),
+    # )
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Выберите вопрос, который вас интересует:",
         reply_markup=await kb.get_faq_menu(faq_questions=faq_dict),
     )
     bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))
+    await handle_show_menu_btn(update=update, context=context)
 
 
 async def subscribe(
