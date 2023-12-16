@@ -36,14 +36,17 @@ class Customer(models.Model):
         max_length=254,
         verbose_name='Email',
         help_text='Email',
-        default='',
+        unique=True,
+        blank=False,
+        null=False,
     )
     phone = models.CharField(
         max_length=11,
         unique=True,
         verbose_name='Телефон',
         help_text='Телефон',
-        default='',
+        blank=False,
+        null=False,
     )
     tg_id = models.CharField(
         max_length=100,
@@ -57,7 +60,8 @@ class Customer(models.Model):
         max_length=254,
         verbose_name='Имя',
         help_text='Имя',
-        default='',
+        blank=False,
+        null=False,
     )
 
     class Meta:
