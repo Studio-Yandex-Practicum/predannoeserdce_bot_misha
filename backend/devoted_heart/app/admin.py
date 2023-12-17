@@ -29,7 +29,7 @@ class MessagesAdmin(admin.ModelAdmin):
     """
     Админка для сообщений: админ может добавить текстовое сообщение
     дополнительно к рассылаемым random сообщениям из regular_messages.
-    Например: Привет! Это Фуражкин!
+    Например: Привет от Фуражкина!!!
     """
     list_display = ['text']
     form = MessagesForm
