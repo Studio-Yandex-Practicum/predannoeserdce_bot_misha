@@ -16,7 +16,6 @@ if ApiEnabled.ENABLE_FAQ:
 if ApiEnabled.ENABLE_CUSTOMER:
     router.register('customer', CustomerVewset)
 
-
 auth_patterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', CustomLogoutView.as_view(), name='logout'),
