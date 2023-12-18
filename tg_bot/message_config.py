@@ -68,6 +68,7 @@ class ConversationLogMessage:
     SEND_QUESTION = "Вопрос пользователя id:%s отправлен администратору"
     END = "Общение с пользователем id:%s завершено"
     CANCEL = "Общение прервано пользователем id:%s"
+    ANSWER_FROM_ADMIN = "Пользователю %s отправлен ответ администратора"
 
 
 class PlaceholderMessage:

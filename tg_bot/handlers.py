@@ -333,3 +333,4 @@ async def handle_admin_answer(
         parse_mode=ParseMode.HTML,
         reply_markup=await kb.get_main_menu(),
     )
+    bot_logger.info(msg=ConversationLogMessage.ANSWER_FROM_ADMIN % to_chat_id)
