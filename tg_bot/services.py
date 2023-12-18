@@ -9,6 +9,7 @@ from settings import bot_logger
 
 
 async def create_question_message(data: dict) -> str:
+    """Создает текстовое сообщение для администратора."""
     text = (
         "<b>Вам сообщение!</b>\n\n"
         f"От кого: {data['user_fullname']}, id:{data['user_id']},\n"

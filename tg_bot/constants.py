@@ -68,6 +68,7 @@ class RegexText:
     PHONE = r"^\+7\d{10}$"
 
 
+# Стадии разговора
 class ConvState(int, Enum):
     EMAIL = 0
     PHONE = 1

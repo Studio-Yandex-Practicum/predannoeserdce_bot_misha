@@ -28,8 +28,8 @@ from validators import email_validate, fullname_validate, phone_validate
 
 def update_faq() -> None:
     """Обновляет список частых вопросов."""
-    global faq_dict
-    faq_dict = get_faq()
+    global faq_list
+    faq_list = get_faq()
     bot_logger.info(msg=MenuLogMessage.UPDATE_FAQ_LIST)
 
 
@@ -121,7 +121,7 @@ async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Выберите вопрос, который вас интересует:",
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_dict),
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_list),
     )
     bot_logger.info(msg=MenuLogMessage.PROCESSING_BTN % update.message.text)
     await handle_show_menu_btn(update=update, context=context)
@@ -130,6 +130,7 @@ async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def subscribe(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    """Обрабатывает нажатие кнопки `Подписаться на рассылку`."""
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=MenuLogMessage.STUB_BTN % update.message.text,
@@ -140,10 +141,9 @@ async def subscribe(
 async def handle_faq_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    """Обрабатывает частые вопросы. Выдаёт ответы."""
     query = update.callback_query
     order = query.data
-    if order == "main_menu":
-        await handle_show_main_menu(update=update, context=context)
     if order == "custom_question":
         await query.edit_message_text(
             text=ConversationTextMessage.COMMUNICATION_WAY,
@@ -318,10 +318,10 @@ async def conv_cancel(
 # ----- КОНЕЦ ОБЩЕНИЯ ----- #
 
 
-# -----ОБРАБОТКА ОТВЕТА АДМИНА ----- #
 async def handle_admin_answer(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    """Обработка ответа администратора, отправка его пользователю."""
     if update.message.from_user.id != int(ADMIN_CHAT_ID):
         return None
     text = update.message.reply_to_message.text.split(sep=",")

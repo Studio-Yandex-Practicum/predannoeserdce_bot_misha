@@ -61,6 +61,7 @@ async def remove_menu() -> ReplyKeyboardRemove:
 async def get_url_button(
     btn_attrs: LinkButtonAttributes,
 ) -> InlineKeyboardMarkup:
+    """Создаёт клавиатуру с кнопкой-ссылкой."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=btn_attrs.text, url=btn_attrs.url)]
@@ -95,6 +96,7 @@ async def get_faq_menu(faq_questions: list) -> InlineKeyboardMarkup:
 
 
 async def get_communication_way() -> InlineKeyboardMarkup:
+    """Создаёт клавиатуру выбора способа общения (телеграм или email)."""
     keyboard = [
         [
             InlineKeyboardButton(

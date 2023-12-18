@@ -59,6 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
+    """Запуск бота."""
     application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
     cancel_pattern = re.compile(pattern=RegexText.CANCEL, flags=re.IGNORECASE)
     handlers = [

@@ -8,7 +8,8 @@ from message_config import MenuLogMessage
 from settings import bot_logger
 
 
-def get_faq() -> dict:
+def get_faq() -> list[dict[str, str | int]]:
+    """Получение из БД списка частых вопросов и ответов."""
     url = SERVER_API_FAQ_URL
     results = []
     while True:
@@ -20,6 +21,7 @@ def get_faq() -> dict:
             bot_logger.error(
                 msg=MenuLogMessage.SERVER_ERROR % (response.status_code,)
             )
+            # TODO Обработать ошибку сервера.
             return {
                 "Ошибка. Нажмите, "
                 "чтобы сообщить администратору": "server_error"
