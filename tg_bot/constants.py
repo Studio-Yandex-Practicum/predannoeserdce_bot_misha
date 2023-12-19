@@ -1,5 +1,6 @@
 ﻿import logging
 import os
+from enum import Enum
 
 from dotenv import load_dotenv
 
@@ -36,13 +37,42 @@ LINK_ITEMS: dict[str, LinkButtonAttributes] = {
         text="Посмотреть котиков можно по ссылке",
         url="https://predannoeserdce.ru/catalog-opeka/",
     ),
+    "перейти на сайт приюта": LinkButtonAttributes(
+        text="Перейти на главную страницу",
+        url="https://predannoeserdce.ru/",
+    ),
 }
 MENU_LAYOUT = 3
+FAQ_PER_PAGE = 5
+
+
+# Отдельные кнопки
+class OneButtonItems:
+    MENU = "меню"
+    CANCEL = "отмена"
+
 
 # Задержки
-START_SLEEP = 3
-MENU_SLEEP = 5
+START_SLEEP = 1
+MENU_SLEEP = 3
 
 # Получение и обновление списка вопросов
 SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")
 FAQ_UPDATE_INTERVAL_MINUTES = 10
+
+
+# Проверки введенного текста
+class RegexText:
+    USER_FULLNAME = r"(\b[А-Я]{1}[а-я]+\b)"
+    CANCEL = r"^отмена$"
+    EMAIL = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    PHONE = r"^\+7\d{10}$"
+
+
+# Стадии разговора
+class ConvState(int, Enum):
+    EMAIL = 0
+    PHONE = 1
+    SUBJECT = 2
+    QUESTION = 3
+    SEND = 4

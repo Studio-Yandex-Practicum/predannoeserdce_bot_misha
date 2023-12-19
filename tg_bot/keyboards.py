@@ -6,8 +6,14 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 
-from constants import LINK_ITEMS, MENU_ITEMS, MENU_LAYOUT
-from message_config import InlineButtonText, LogMessage, PlaceholderMessage
+from constants import (
+    FAQ_PER_PAGE,
+    LINK_ITEMS,
+    MENU_ITEMS,
+    MENU_LAYOUT,
+    OneButtonItems,
+)
+from message_config import InlineButtonText, MenuLogMessage, PlaceholderMessage
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -15,9 +21,18 @@ from utils import LinkButtonAttributes
 async def get_menu_button() -> ReplyKeyboardMarkup:
     """Создает кнопку вызова меню."""
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="МЕНЮ")]],
+        keyboard=[[KeyboardButton(text=OneButtonItems.MENU.upper())]],
         resize_keyboard=True,
         input_field_placeholder=PlaceholderMessage.MENU_BTN,
+    )
+
+
+async def get_cancel_button() -> ReplyKeyboardMarkup:
+    """Создает кнопку отмены разговора."""
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=OneButtonItems.CANCEL.upper())]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
     )
 
 
@@ -34,7 +49,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
             row.append(KeyboardButton(text=btn_list[btn_idx].capitalize()))
             btn_idx += 1
         keyboard.append(row)
-    bot_logger.info(msg=LogMessage.CREATE_MAIN_KB)
+    bot_logger.info(msg=MenuLogMessage.CREATE_MAIN_KB)
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True,
@@ -45,13 +60,14 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
 
 async def remove_menu() -> ReplyKeyboardRemove:
     """Удаляет клавиатуру."""
-    bot_logger.info(msg=LogMessage.REMOVE_KB)
+    bot_logger.info(msg=MenuLogMessage.REMOVE_KB)
     return ReplyKeyboardRemove()
 
 
 async def get_url_button(
     btn_attrs: LinkButtonAttributes,
 ) -> InlineKeyboardMarkup:
+    """Создаёт клавиатуру с кнопкой-ссылкой."""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=btn_attrs.text, url=btn_attrs.url)]
@@ -59,27 +75,76 @@ async def get_url_button(
     )
 
 
-async def get_faq_menu(faq_questions: list) -> InlineKeyboardMarkup:
+async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
     """Создает клавиатуру с частыми вопросами."""
-
-    # TODO: Создать постраничную клавиатуру
-
+    items_list = faq_questions + [
+        {
+            "question": InlineButtonText.CUSTOM_QUESTION,
+            "order": "custom_question",
+        }
+    ]
+    pages_count = (len(items_list) + FAQ_PER_PAGE - 1) // FAQ_PER_PAGE
+    if page == -1:
+        page = pages_count
+    start_idx = (page - 1) * FAQ_PER_PAGE
+    end_idx = start_idx + FAQ_PER_PAGE
+    page_faq = items_list[start_idx:end_idx]
     keyboard = [
         [
             InlineKeyboardButton(
                 text=item["question"], callback_data=item["order"]
             )
         ]
-        for item in faq_questions
+        for item in page_faq
     ]
-    keyboard.append(
+    if pages_count == 1:
+        bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)
+        return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+    navigation_buttons = []
+    if page > 2:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.FIRST_PAGE, callback_data="first_page"
+            )
+        )
+    if page > 1:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.PREV_PAGE, callback_data="prev_page"
+            )
+        )
+    if page < pages_count:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.NEXT_PAGE, callback_data="next_page"
+            )
+        )
+    if page < pages_count - 1:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.LAST_PAGE,
+                callback_data="last_page",
+            )
+        )
+    keyboard.append(navigation_buttons)
+    bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def get_communication_way() -> InlineKeyboardMarkup:
+    """Создаёт клавиатуру выбора способа общения (телеграм или email)."""
+    keyboard = [
         [
             InlineKeyboardButton(
-                text=InlineButtonText.CUSTOM_QUESTION,
-                callback_data="custom_question",
-            )
+                text=InlineButtonText.TELEGRAM_QUESTION,
+                callback_data="tg_question",
+            ),
+            InlineKeyboardButton(
+                text=InlineButtonText.EMAIL_QUESTION,
+                callback_data="email_question",
+            ),
         ]
-    )
-
-    bot_logger.info(msg=LogMessage.CREATE_FAQ_KB)
+    ]
+    bot_logger.info(msg=MenuLogMessage.CREATE_CUSTOM_QUESTION_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
