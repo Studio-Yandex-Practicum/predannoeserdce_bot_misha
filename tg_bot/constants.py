@@ -38,10 +38,11 @@ LINK_ITEMS: dict[str, LinkButtonAttributes] = {
     ),
 }
 MENU_LAYOUT = 3
+FAQ_PER_PAGE = 5
 
 # Задержки
-START_SLEEP = 3
-MENU_SLEEP = 5
+START_SLEEP = 1
+MENU_SLEEP = 3
 
 # Получение и обновление списка вопросов
 SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")

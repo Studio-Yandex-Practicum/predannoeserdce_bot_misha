@@ -12,8 +12,8 @@ from settings import bot_logger
 
 def update_faq() -> None:
     """Обновляет список частых вопросов."""
-    global faq_dict
-    faq_dict = get_faq()
+    global faq_list
+    faq_list = get_faq()
     bot_logger.info(msg=LogMessage.UPDATE_FAQ_LIST)
 
 
@@ -98,16 +98,13 @@ async def handle_url_button(
 
 async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обрабатывает нажатие кнопки `Частые вопросы`."""
-    # await context.bot.send_message(
-    #     chat_id=update.effective_chat.id,
-    #     text="Что вы хотите узнать?",
-    #     reply_markup=await kb.remove_menu(),
-    # )
+    page = 1
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Выберите вопрос, который вас интересует:",
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_dict),
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page),
     )
+    context.user_data["page"] = page
     bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))
     await handle_show_menu_btn(update=update, context=context)
 
@@ -127,8 +124,20 @@ async def handle_faq_callback(
 ) -> None:
     query = update.callback_query
     order = query.data
-    if order == "main_menu":
-        await handle_show_main_menu(update=update, context=context)
+    page = context.user_data.get("page", None)
     if order == "custom_question":
-        pass
+        await query.answer()
+        return None
+    if order == "next_page":
+        page += 1
+    if order == "prev_page":
+        page -= 1
+    if order == "first_page":
+        page = 1
+    if order == "last_page":
+        page = -1
+    await update.effective_message.edit_reply_markup(
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page)
+    )
+    context.user_data["page"] = page
     await query.answer()
