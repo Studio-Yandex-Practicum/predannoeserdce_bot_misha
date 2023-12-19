@@ -8,7 +8,7 @@ from message_config import LogMessage
 from settings import bot_logger
 
 
-def get_faq() -> dict:
+def get_faq() -> list:
     url = SERVER_API_FAQ_URL
     results = []
     while True:
