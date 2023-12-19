@@ -125,7 +125,7 @@ async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page),
     )
     context.user_data["page"] = page
-    bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))
+    bot_logger.info(msg=MenuLogMessage.PROCESSING_BTN % (update.message.text,))
     await handle_show_menu_btn(update=update, context=context)
 
 
