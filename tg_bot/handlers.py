@@ -118,12 +118,14 @@ async def handle_url_button(
 
 async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обрабатывает нажатие кнопки `Частые вопросы`."""
+    page = 1
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Выберите вопрос, который вас интересует:",
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_list),
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page),
     )
-    bot_logger.info(msg=MenuLogMessage.PROCESSING_BTN % update.message.text)
+    context.user_data["page"] = page
+    bot_logger.info(msg=LogMessage.PROCESSING_BTN % (update.message.text,))
     await handle_show_menu_btn(update=update, context=context)
 
 
@@ -144,11 +146,26 @@ async def handle_faq_callback(
     """Обрабатывает частые вопросы. Выдаёт ответы."""
     query = update.callback_query
     order = query.data
+    page = context.user_data.get("page", None)
     if order == "custom_question":
         await query.edit_message_text(
             text=ConversationTextMessage.COMMUNICATION_WAY,
             reply_markup=await kb.get_communication_way(),
         )
+        await query.answer()
+        return None
+    if order == "next_page":
+        page += 1
+    if order == "prev_page":
+        page -= 1
+    if order == "first_page":
+        page = 1
+    if order == "last_page":
+        page = -1
+    await update.effective_message.edit_reply_markup(
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page)
+    )
+    context.user_data["page"] = page
     await query.answer()
 
 

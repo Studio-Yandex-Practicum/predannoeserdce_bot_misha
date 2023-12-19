@@ -50,7 +50,7 @@ class MenuLogMessage:
     STUB_BTN = "Здесь должна быть обработка кнопки %s, но её пока нет"
     CREATE_MAIN_KB = "Создана основная клавиатура"
     REMOVE_KB = "Клавиатура удалена"
-    CREATE_FAQ_KB = "Создана клавиатура частых вопросов"
+    CREATE_FAQ_KB = "Создана страница №%s клавиатуры частых вопросов"
     UNKNOWN_ERROR = "Что-то пошло не так! Ошибка: %s"
     SERVER_ERROR = "Ошибка получения данных с сервера: %s"
     UPDATE_FAQ_LIST = "Список частых вопросов обновлён"
@@ -78,5 +78,10 @@ class PlaceholderMessage:
 
 class InlineButtonText:
     CUSTOM_QUESTION = "Задать другой вопрос коту Фуражкину"
+    FIRST_PAGE = "<<  Перв."
+    LAST_PAGE = "Посл.  >>"
+    PREV_PAGE = "<  Пред."
+    NEXT_PAGE = "След.  >"
     TELEGRAM_QUESTION = "Telegram"
     EMAIL_QUESTION = "Email"
+    CUSTOM_QUESTION = "Задать другой вопрос коту Фуражкину"
