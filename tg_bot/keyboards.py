@@ -6,10 +6,14 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 
-
-from constants import LINK_ITEMS, MENU_ITEMS, MENU_LAYOUT, OneButtonItems
+from constants import (
+    FAQ_PER_PAGE,
+    LINK_ITEMS,
+    MENU_ITEMS,
+    MENU_LAYOUT,
+    OneButtonItems,
+)
 from message_config import InlineButtonText, MenuLogMessage, PlaceholderMessage
-
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -94,7 +98,7 @@ async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
         for item in page_faq
     ]
     if pages_count == 1:
-        bot_logger.info(msg=LogMessage.CREATE_FAQ_KB % page)
+        bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
     navigation_buttons = []
@@ -124,9 +128,7 @@ async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
             )
         )
     keyboard.append(navigation_buttons)
-    bot_logger.info(msg=LogMessage.CREATE_FAQ_KB % page)
-        ]
-    )
+    bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
