@@ -1,126 +1,111 @@
-import logging
+import os
+from http import HTTPStatus
 from typing import Dict
 
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    ConversationHandler,
-    MessageHandler,
-    filters,
-    CallbackQueryHandler
-)
+import requests
+from telegram import Update
+from telegram.ext import (CallbackQueryHandler, ContextTypes,
+                          ConversationHandler, MessageHandler, filters)
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
-
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
-
-keyboard = [
-    [InlineKeyboardButton('Email', callback_data='email'), InlineKeyboardButton('ФИО', callback_data='name')],
-    [InlineKeyboardButton('Телефон', callback_data='phone')],
-]
-markup = InlineKeyboardMarkup(keyboard)
+import keyboards as kb
+from constants import API_CUSTOMER, SubState
+from message_config import CUSTOMER, SubMessageText
+from utils import format_error_messages
 
 
 def facts_to_str(user_data: Dict[str, str]) -> str:
-    facts = [f"{key} - {value}" for key, value in user_data.items()]
+    facts = [f"{CUSTOMER[key]} - {value}" for key, value in user_data.items()]
     return "\n".join(facts).join(["\n", "\n"])
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Start the conversation and ask user for input."""
     await update.message.reply_text(
-        "Чтобы подписаться на рассылку, немного расскажи о себе.",
-        reply_markup=markup,
+        SubMessageText.START,
+        reply_markup=await kb.get_customer_menu(),
     )
-    return CHOOSING
+    return SubState.CHOOSING
 
 
 async def regular_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Ask the user for info about the selected predefined choice."""
     text = update.callback_query.data
-    context.user_data["choice"] = text
-    print(context.user_data)
-    await update.callback_query.message.edit_text(f"Напишите ваш {text.lower()}")
+    context.user_data[SubMessageText.CHOICE] = text
+    await update.callback_query.message.edit_text(f"{SubMessageText.WRITE} {CUSTOMER[text]}")
 
-    return TYPING_REPLY
-
-
-async def custom_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Ask the user for a description of a custom category."""
-    await update.message.reply_text(
-        'Alright, please send me the category first, for example "Most impressive skill"'
-    )
-
-    return TYPING_CHOICE
+    return SubState.TYPING_REPLY
 
 
 async def received_information(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Store info provided by user and ask for the next category."""
     user_data = context.user_data
     text = update.message.text
-    category = user_data["choice"]
+    category = user_data[SubMessageText.CHOICE]
     user_data[category] = text
-    if all(key in user_data for key in ['Email', 'name', 'telephone']):
+    if all(key in user_data for key in CUSTOMER.keys()):
         # Показываем кнопку "Подписаться"
-        keyboard.append([InlineKeyboardButton('Подписаться', callback_data='sub')])
-        markup = InlineKeyboardMarkup(keyboard)
+        markup =await  kb.get_sub_menu()
     else:
-        markup = InlineKeyboardMarkup(keyboard)
-    del user_data["choice"]
-
+        markup =await  kb.get_customer_menu()
+    del user_data[SubMessageText.CHOICE]
     await update.message.reply_text(
-        "Ваши данные:"
+        f"{SubMessageText.USER_DATE}"
         f"{facts_to_str(user_data)}",
         reply_markup=markup,
     )
 
-    return CHOOSING
+    return SubState.CHOOSING
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Display the gathered info and end the conversation."""
     user_data = context.user_data
-    print(user_data)
-    if "choice" in user_data:
-        del user_data["choice"]
+    api_url = API_CUSTOMER
+    token = os.getenv('ADMIN_TOKEN')
+    if SubMessageText.CHOICE in user_data:
+        del user_data[SubMessageText.CHOICE]
 
-    await update.message.reply_text(
-        f"Вы подписаны на рассылку!{facts_to_str(user_data)}",
-        reply_markup=ReplyKeyboardRemove(),
+    data_to_send = {
+        'email': user_data['email'],
+        'name': user_data['name'],
+        'phone': user_data['phone'],
+        'tg_id': str(update.callback_query.from_user.id)
+    }
+
+    data_to_user = {
+        'Email': user_data['email'],
+        'Имя': user_data['name'],
+        'Телефон': user_data['phone'],
+    }
+
+    headers = {
+        'Authorization': f'Token {token}',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(api_url, json=data_to_send, headers=headers)
+    if response.status_code == HTTPStatus.CREATED:
+        text = f"{SubMessageText.DONE}{facts_to_str(data_to_user)}"
+    else:
+        error = format_error_messages(response.text)
+        text = f"{SubMessageText.ERROR}{error}"
+    await update.callback_query.message.edit_text(
+        text
     )
-
     user_data.clear()
     return ConversationHandler.END
 
 
-
-# Add conversation handler with the states CHOOSING, TYPING_CHOICE and TYPING_REPLY
-conv_handler = ConversationHandler(
+sub_handler = ConversationHandler(
     entry_points=[MessageHandler(filters.Text(['Подписаться на рассылку']), start)],
     states={
-        CHOOSING: [
-            CallbackQueryHandler(regular_choice, pattern="^(email|name|phone)$"),
+        SubState.CHOOSING: [
+            CallbackQueryHandler(regular_choice, pattern=f"^({'|'.join(CUSTOMER.keys())})$"),
         ],
-        TYPING_CHOICE: [
+        SubState.TYPING_CHOICE: [
             MessageHandler(
-                filters.TEXT & ~(filters.COMMAND | filters.Regex("^Подписаться$")), regular_choice
+                filters.TEXT , regular_choice
             )
         ],
-        TYPING_REPLY: [
-            MessageHandler(
-                filters.TEXT & ~(filters.COMMAND | filters.Regex("^Подписаться$")),
-                received_information,
-            )
+        SubState.TYPING_REPLY: [
+            MessageHandler(filters.TEXT, received_information,)
         ],
     },
-    fallbacks=[MessageHandler(filters.Regex("^Подписаться$"), done)],
+    fallbacks=[CallbackQueryHandler(done, pattern="^sub$")],
 )
-
-

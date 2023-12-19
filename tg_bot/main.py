@@ -1,21 +1,29 @@
-﻿import logging
-import asyncio
+﻿import asyncio
+import logging
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters,
-)
-from constants import TELEGRAM_TOKEN
+from telegram.ext import (ApplicationBuilder, CommandHandler, ContextTypes,
+                          MessageHandler, filters)
+
+from constants import TELEGRAM_TOKEN, TOKEN_UPDATE
+from handlers.subscription import sub_handler
 from message_config import MESSAGES
-from handlers.subscription import conv_handler
-
-
+from utils import get_token
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
+scheduller = AsyncIOScheduler()
+scheduller.add_job(
+    func=get_token,
+    trigger="interval",
+    hours=TOKEN_UPDATE,
+)
+scheduller.start()
+get_token()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,7 +59,7 @@ if __name__ == '__main__':
         CommandHandler('start', start),
         CommandHandler('menu', menu),
         MessageHandler((filters.AUDIO | filters.PHOTO), alert_message),
-        conv_handler
+        sub_handler
     ]
     for handler in handlers:
         application.add_handler(handler)
