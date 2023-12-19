@@ -7,12 +7,15 @@ from telegram.ext import (
 )
 from constants import TELEGRAM_TOKEN
 from message_config import MESSAGES
+from handlers.subscription import conv_handler
+
 
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -47,7 +50,8 @@ if __name__ == '__main__':
     handlers = [
         CommandHandler('start', start),
         CommandHandler('menu', menu),
-        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message)
+        MessageHandler((filters.AUDIO | filters.PHOTO), alert_message),
+        conv_handler
     ]
     for handler in handlers:
         application.add_handler(handler)
