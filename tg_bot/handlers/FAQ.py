@@ -1,12 +1,14 @@
 import logging
 
-import requests
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (CallbackQueryHandler, ContextTypes,
-                          ConversationHandler, MessageHandler, filters)
 
-from constants import (BACK_TO_FAQ, BACK_TO_MENU, FAQLIST, IN_MENU, MENU,
-                       SELECTFAQ, SERVER_IP)
+from telegram import Update
+from telegram.ext import (CallbackQueryHandler, ContextTypes,
+                          ConversationHandler, MessageHandler, filters, CommandHandler)
+
+from constants import (FAQLIST, IN_MENU, MENU, SELECTFAQ)
+from keyboards.keyboards import AnswerKeyboard, FAQKeyboard
+from utils.utils import getFaq
+
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -16,43 +18,21 @@ logger = logging.getLogger(__name__)
 
 START_ROUTES, END_ROUTES = range(2)
 
-async def getFaq():
-    answers = []
-    while True:
-        link = f'http://{SERVER_IP}/api/faq'
-        res = requests.get(link)
-        data = res.json()['results']
-        answers  += data
-        if res.json()['next'] == None:
-            break
-        link = res.json()['next']
-    return answers
-
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = update.message.from_user
-    keyboard = []
     logger.info("Пользователь %s перешел в раздел FAQ.", user.first_name)
     answers = getFaq()
     context.bot_data['answers'] = answers
-    for i in answers:
-        keyboard.append([InlineKeyboardButton(i['question'], callback_data=i['question'])])
-    keyboard.append([InlineKeyboardButton(BACK_TO_MENU, callback_data=MENU)])
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(SELECTFAQ, reply_markup=reply_markup)
+    await update.message.reply_text(SELECTFAQ, reply_markup=FAQKeyboard(answers))
     return START_ROUTES
 
 
 async def FAQList(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    keyboard = []
     questions = context.bot_data.get('answers')
-    for i in questions:
-        keyboard.append([InlineKeyboardButton(i['question'], callback_data=i['question'])])
-    keyboard.append([InlineKeyboardButton(BACK_TO_MENU, callback_data=MENU)])
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text(text=SELECTFAQ, reply_markup=reply_markup)
+    await query.edit_message_text(text=SELECTFAQ, reply_markup=FAQKeyboard(questions))
     return START_ROUTES
 
 
@@ -64,13 +44,8 @@ async def FAQAnswer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     for pair in questions:
         if pair['question'] == data:
             answer = pair['answer']
-    keyboard = [
-        [InlineKeyboardButton(BACK_TO_FAQ, callback_data=FAQLIST)],
-        [InlineKeyboardButton(BACK_TO_MENU, callback_data=MENU)]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
     await query.edit_message_text(
-        text=answer, reply_markup=reply_markup
+        text=answer, reply_markup=AnswerKeyboard()
     )
     return START_ROUTES
 
@@ -89,9 +64,11 @@ conv_handler = ConversationHandler(
             CallbackQueryHandler(FAQList, pattern="^" + FAQLIST + "$"),
             CallbackQueryHandler(end, pattern="^" + MENU + "$"),
             CallbackQueryHandler(FAQAnswer),
+            CommandHandler("menu", end),
         ],
         END_ROUTES: [
             CallbackQueryHandler(end, pattern="^" + MENU + "$"),
+            CommandHandler("menu", end),
         ],
     },
     fallbacks=[MessageHandler(filters.Text(['Частые вопросы']), start)],
