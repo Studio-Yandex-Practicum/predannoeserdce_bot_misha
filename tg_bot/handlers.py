@@ -148,13 +148,23 @@ async def handle_faq_callback(
     """Обрабатывает частые вопросы. Выдаёт ответы."""
     query = update.callback_query
     order = query.data
-    if order != MainCallbacks.CUSTOM_QUESTION or not order.isdigit():
+    if order.isdigit():
+        answer = "".join(
+            [
+                item["answer"]
+                for item in faq_list
+                if item["order"] == int(order)
+            ]
+        )
+        await context.bot.send_message(chat_id=query.from_user.id, text=answer)
+    elif order != MainCallbacks.CUSTOM_QUESTION:
         await handle_faq_pagination(update=update, context=context)
         return None
-    await query.edit_message_text(
-        text=ConversationTextMessage.COMMUNICATION_WAY,
-        reply_markup=await kb.get_communication_way(),
-    )
+    else:
+        await query.edit_message_text(
+            text=ConversationTextMessage.COMMUNICATION_WAY,
+            reply_markup=await kb.get_communication_way(),
+        )
     await query.answer()
 
 
