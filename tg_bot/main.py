@@ -18,6 +18,7 @@ from constants import (
     START_SLEEP,
     TELEGRAM_TOKEN,
     ConvState,
+    MainCallbacks,
     RegexText,
 )
 from handlers import (
@@ -66,10 +67,12 @@ def main() -> None:
         ConversationHandler(
             entry_points=[
                 CallbackQueryHandler(
-                    callback=handle_conv_callback, pattern="tg_question"
+                    callback=handle_conv_callback,
+                    pattern=MainCallbacks.TG_QUESTION,
                 ),
                 CallbackQueryHandler(
-                    callback=handle_conv_callback, pattern="email_question"
+                    callback=handle_conv_callback,
+                    pattern=MainCallbacks.EMAIL_QUESTION,
                 ),
             ],
             states={

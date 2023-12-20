@@ -12,7 +12,9 @@ from constants import (
     MENU_SLEEP,
     START_SLEEP,
     ConvState,
+    MainCallbacks,
     OneButtonItems,
+    PaginationCallback,
 )
 from message_config import (
     MESSAGES,
@@ -21,7 +23,7 @@ from message_config import (
     MenuLogMessage,
 )
 from requests_db import get_faq
-from services import send_question_email, send_question_tg
+from services import faq_pages_count, send_question_email, send_question_tg
 from settings import bot_logger
 from validators import email_validate, fullname_validate, phone_validate
 
@@ -146,22 +148,32 @@ async def handle_faq_callback(
     """Обрабатывает частые вопросы. Выдаёт ответы."""
     query = update.callback_query
     order = query.data
-    page = context.user_data.get("page", None)
-    if order == "custom_question":
-        await query.edit_message_text(
-            text=ConversationTextMessage.COMMUNICATION_WAY,
-            reply_markup=await kb.get_communication_way(),
-        )
-        await query.answer()
+    if order != MainCallbacks.CUSTOM_QUESTION or not order.isdigit():
+        await handle_faq_pagination(update=update, context=context)
         return None
-    if order == "next_page":
+    await query.edit_message_text(
+        text=ConversationTextMessage.COMMUNICATION_WAY,
+        reply_markup=await kb.get_communication_way(),
+    )
+    await query.answer()
+
+
+async def handle_faq_pagination(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Пагинация кнопок с частыми вопросами."""
+    query = update.callback_query
+    order = query.data
+    pages_count = await faq_pages_count(faq_list=faq_list)
+    page = context.user_data.get("page", None)
+    if order == PaginationCallback.NEXT_PAGE:
         page += 1
-    if order == "prev_page":
+    if order == PaginationCallback.PREV_PAGE:
         page -= 1
-    if order == "first_page":
+    if order == PaginationCallback.FIRST_PAGE:
         page = 1
-    if order == "last_page":
-        page = -1
+    if order == PaginationCallback.LAST_PAGE:
+        page = pages_count
     await update.effective_message.edit_reply_markup(
         reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page)
     )
