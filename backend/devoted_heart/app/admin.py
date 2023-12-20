@@ -1,5 +1,7 @@
 import logging
 from django.contrib import admin
+from django.contrib.admin.actions import delete_selected
+from django_object_actions import DjangoObjectActions
 from django.shortcuts import render
 from django.urls import path
 
@@ -25,19 +27,22 @@ class CustomerAdmin(admin.ModelAdmin):
     search_fields = ('name', 'tg_id')
 
 
-class MessagesAdmin(admin.ModelAdmin):
+class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
     """
     Админка для сообщений: админ может добавить текстовое сообщение
     дополнительно к рассылаемым random сообщениям из regular_messages.
     Например: Привет от Фуражкина!!!
     """
-    list_display = ['text']
+    list_display = ('text', 'image', 'selected')
     form = MessagesForm
+    list_editable = ('selected',)
     actions = [
         'send_messages_view',
         'start_scheduler',
         'stop_scheduler'
     ]
+
+    changelist_actions = ('start_scheduler', 'stop_scheduler')
 
     def get_urls(self):
         urls = super().get_urls()
@@ -71,7 +76,7 @@ class MessagesAdmin(admin.ModelAdmin):
                 'Произошла ошибка при отправке сообщений.'
             )
         return render(request, 'admin/send_messages_done.html')
-    send_messages_view.short_description = "Отправить сообщения"
+    send_messages_view.short_description = "Отправить сообщение"
 
     def start_scheduler(self, request, queryset=None):
         """Планировщик заданий - рассылка регулярных сообщений"""
@@ -100,6 +105,9 @@ class MessagesAdmin(admin.ModelAdmin):
             )
         return render(request, 'admin/stop_scheduler_done.html')
     stop_scheduler.short_description = "Остановить планировщик"
+
+
+delete_selected.short_description = 'Удалить выбранное'
 
 
 admin.site.register(FAQ, FAQAdmin)

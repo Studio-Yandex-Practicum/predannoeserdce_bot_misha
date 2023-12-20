@@ -78,12 +78,25 @@ class Messages(models.Model):
         'Customer', on_delete=models.CASCADE,
         null=True, blank=True
     )
-    text = models.TextField()
+    text = models.TextField(
+        max_length=4096,
+        null=True,
+        blank=True,
+        verbose_name='Текст сообщения от администратора',
+    )
+    image = models.ImageField(
+        upload_to='message_images/',
+        null=True,
+        blank=True
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
+    selected = models.BooleanField(
+        default=False,
+        verbose_name='Дополнить планировщик сообщением от администратора',
+    )
 
     class Meta:
         verbose_name_plural = "Сообщения"
-        ordering = ('id', )
 
     def __str__(self):
-        return f"{self.customer} - {self.timestamp}"
+        return f"{self.user} - {self.timestamp}"
