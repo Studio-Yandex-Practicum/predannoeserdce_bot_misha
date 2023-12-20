@@ -14,6 +14,7 @@ from constants import (
     OneButtonItems,
 )
 from message_config import InlineButtonText, MenuLogMessage, PlaceholderMessage
+from services import faq_buttons_list, faq_pages_count
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -77,18 +78,11 @@ async def get_url_button(
 
 async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
     """Создает клавиатуру с частыми вопросами."""
-    items_list = faq_questions + [
-        {
-            "question": InlineButtonText.CUSTOM_QUESTION,
-            "order": "custom_question",
-        }
-    ]
-    pages_count = (len(items_list) + FAQ_PER_PAGE - 1) // FAQ_PER_PAGE
-    if page == -1:
-        page = pages_count
+    buttons = await faq_buttons_list(faq_list=faq_questions)
+    pages_count = await faq_pages_count(faq_list=faq_questions)
     start_idx = (page - 1) * FAQ_PER_PAGE
     end_idx = start_idx + FAQ_PER_PAGE
-    page_faq = items_list[start_idx:end_idx]
+    page_faq = buttons[start_idx:end_idx]
     keyboard = [
         [
             InlineKeyboardButton(
