@@ -12,9 +12,6 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv(key="TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv(key="ADMIN_CHAT_ID")
 
-# Уровень логгера
-LOGGING_LEVEL = logging.INFO
-
 # Кнопки меню
 MENU_ITEMS: dict[str, str] = {
     "частые вопросы": "faq",
@@ -89,3 +86,14 @@ class MainCallbacks:
     CUSTOM_QUESTION = "custom_question"
     TG_QUESTION = "tg_question"
     EMAIL_QUESTION = "email_question"
+
+
+# Настройки логгера:
+class LogSetting:
+    FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    LEVEL = logging.INFO
+    NAME = "tg_bot"
+    FILENAME = "bot_logs/tg_bot.log"
+    ENCODING = "utf8"
+    FILESIZE = 1024 * 1024
+    FILECOUNT = 3
