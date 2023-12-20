@@ -76,3 +76,16 @@ class ConvState(int, Enum):
     SUBJECT = 2
     QUESTION = 3
     SEND = 4
+
+
+class PaginationCallback:
+    FIRST_PAGE = "first_page"
+    PREV_PAGE = "prev_page"
+    NEXT_PAGE = "next_page"
+    LAST_PAGE = "last_page"
+
+
+class MainCallbacks:
+    CUSTOM_QUESTION = "custom_question"
+    TG_QUESTION = "tg_question"
+    EMAIL_QUESTION = "email_question"
