@@ -84,4 +84,3 @@ class InlineButtonText:
     NEXT_PAGE = "След.  >"
     TELEGRAM_QUESTION = "Telegram"
     EMAIL_QUESTION = "Email"
-    CUSTOM_QUESTION = "Задать другой вопрос коту Фуражкину"
