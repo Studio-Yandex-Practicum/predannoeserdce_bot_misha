@@ -6,8 +6,8 @@ from telegram.ext import (CallbackQueryHandler, ContextTypes,
                           ConversationHandler, MessageHandler, filters, CommandHandler)
 
 from constants import (FAQLIST, IN_MENU, MENU, SELECTFAQ)
-from keyboards.keyboards import AnswerKeyboard, FAQKeyboard
-from utils.utils import getFaq
+from keyboards import AnswerKeyboard, FAQKeyboard
+from utils import getFaq
 
 
 logging.basicConfig(
