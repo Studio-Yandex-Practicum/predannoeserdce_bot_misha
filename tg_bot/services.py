@@ -3,8 +3,12 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 import keyboards as kb
-from constants import ADMIN_CHAT_ID
-from message_config import ConversationLogMessage, MenuLogMessage
+from constants import ADMIN_CHAT_ID, FAQ_PER_PAGE, MainCallbacks
+from message_config import (
+    ConversationLogMessage,
+    InlineButtonText,
+    MenuLogMessage,
+)
 from settings import bot_logger
 
 
@@ -42,3 +46,18 @@ async def send_question_email(
         text=MenuLogMessage.STUB_BTN % "`Отправка по email`",
     )
     bot_logger.info(msg=ConversationLogMessage.SEND_QUESTION % data["user_id"])
+
+
+async def faq_pages_count(faq_list: list[dict]) -> int:
+    return (
+        len(await faq_buttons_list(faq_list=faq_list)) + FAQ_PER_PAGE - 1
+    ) // FAQ_PER_PAGE
+
+
+async def faq_buttons_list(faq_list) -> list[dict]:
+    return faq_list + [
+        {
+            "question": InlineButtonText.CUSTOM_QUESTION,
+            "order": MainCallbacks.CUSTOM_QUESTION,
+        }
+    ]
