@@ -1,0 +1,16 @@
+venv
+.git
+db.sqlite3
+.env
+.vscode
+.pytest-cache
+.coverage
+.coveragerc
+htmlcov
+coverage*
+*.http
+*-dev*
+
+# github images
+/media/github/
+tmp
