@@ -13,12 +13,9 @@ def get_token():
     }
     response = requests.post(token_url, data=credentials)
     if response.status_code == 200:
-        # Обработка успешного запроса - получение токена
         token_data = response.json()
         token = token_data.get('auth_token')
         os.environ['ADMIN_TOKEN'] = token
-    else:
-        print('Ошибка при получении токена:', response.status_code)
 
 
 def format_error_messages(text):
@@ -28,4 +25,3 @@ def format_error_messages(text):
         for message in values:
             error_messages.append(message)
     return '\n'.join(error_messages)
-
