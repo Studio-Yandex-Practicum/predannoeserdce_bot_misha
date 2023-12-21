@@ -91,6 +91,7 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
             )
         return render(request, 'admin/start_scheduler_done.html')
     start_scheduler.short_description = "Запустить планировщик"
+    start_scheduler.label = 'Запустить планировщик'
 
     def stop_scheduler(self, request, queryset=None):
         """Планировщик заданий - остановка рассылки регулярных сообщений"""
@@ -105,7 +106,7 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
             )
         return render(request, 'admin/stop_scheduler_done.html')
     stop_scheduler.short_description = "Остановить планировщик"
-
+    stop_scheduler.label = 'Остановить планировщик'
 
 delete_selected.short_description = 'Удалить выбранное'
 

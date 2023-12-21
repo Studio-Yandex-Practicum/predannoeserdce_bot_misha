@@ -87,7 +87,8 @@ class Messages(models.Model):
     image = models.ImageField(
         upload_to='message_images/',
         null=True,
-        blank=True
+        blank=True,
+        verbose_name='Фотография',
     )
     timestamp = models.DateTimeField(auto_now_add=True)
     selected = models.BooleanField(
