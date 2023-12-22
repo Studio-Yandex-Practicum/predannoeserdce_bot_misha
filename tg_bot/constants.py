@@ -48,8 +48,8 @@ FAQ_PER_PAGE = 5
 
 # Отдельные кнопки
 class OneButtonItems:
-    MENU = "меню"
-    CANCEL = "отмена"
+    MENU = "главное меню"
+    CANCEL = "назад в меню"
 
 
 # Задержки
@@ -63,7 +63,7 @@ FAQ_UPDATE_INTERVAL_MINUTES = 10
 
 # Проверки введенного текста
 class RegexText:
-    USER_FULLNAME = r"(\b[А-Я]{1}[а-я]+\b)"
+    USER_FULLNAME = r"(\b[А-ЯЁ]{1}[а-яё]+\b)"
     CANCEL = r"^отмена$"
     EMAIL = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     PHONE = r"^\+7\d{10}$"
