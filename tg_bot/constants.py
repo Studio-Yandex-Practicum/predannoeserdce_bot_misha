@@ -12,6 +12,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv(key="TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv(key="ADMIN_CHAT_ID")
 
+
 # Уровень логгера
 LOGGING_LEVEL = logging.INFO
 
