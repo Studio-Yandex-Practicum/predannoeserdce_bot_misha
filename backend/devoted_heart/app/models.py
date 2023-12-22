@@ -71,5 +71,23 @@ class Customer(models.Model):
         verbose_name_plural = 'Клиенты'
         verbose_name = 'Клиент'
 
+
     def __str__(self) -> str:
         return f'Имя: {self.name}'
+
+
+class Messages(models.Model):
+    """Сообщения"""
+    customer = models.ForeignKey(
+        'Customer', on_delete=models.CASCADE,
+        null=True, blank=True
+    )
+    text = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Сообщения"
+        ordering = ('id', )
+
+    def __str__(self):
+        return f"{self.customer} - {self.timestamp}"
