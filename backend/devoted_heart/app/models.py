@@ -25,6 +25,8 @@ class FAQ(models.Model):
 
     class Meta:
         ordering = ('order', )
+        verbose_name = 'ЧаВо'
+        verbose_name_plural = 'ЧаВо'
 
     def __str__(self) -> str:
         return f'{self.question}'
@@ -66,7 +68,9 @@ class Customer(models.Model):
 
     class Meta:
         ordering = ('id', )
-        verbose_name_plural = "Клиенты"
+        verbose_name_plural = 'Клиенты'
+        verbose_name = 'Клиент'
+
 
     def __str__(self) -> str:
         return f'Имя: {self.name}'
