@@ -94,3 +94,14 @@ class MainCallbacks:
     EMAIL_QUESTION = "email_question"
     BACK_TO_FAQ = "back_to_faq"
     SERVER_ERROR = "server_error"
+
+
+# Настройки логгера:
+class LogSetting:
+    FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    LEVEL = logging.INFO
+    NAME = "tg_bot"
+    FILENAME = "bot_logs/tg_bot.log"
+    ENCODING = "utf8"
+    FILESIZE = 1024 * 1024
+    FILECOUNT = 3
