@@ -265,7 +265,6 @@ async def subscribe(user_data):
         json=get_data_to_send(user_data),
         headers=get_headers(token)
         )
-    print (response)
     if response.status_code == HTTPStatus.CREATED:
         facts = get_data_to_user(user_data)
         text = f"{SubMessageText.DONE}{facts_to_str(facts)}"
