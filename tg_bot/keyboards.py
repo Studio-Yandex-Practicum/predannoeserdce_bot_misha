@@ -8,10 +8,12 @@ from telegram import (
 
 from constants import (
     FAQ_PER_PAGE,
-    LINK_ITEMS,
-    MENU_ITEMS,
+    LINK_BUTTONS,
     MENU_LAYOUT,
+    MainCallbacks,
+    MenuFuncButton,
     OneButtonItems,
+    PaginationCallback,
 )
 from message_config import InlineButtonText, MenuLogMessage, PlaceholderMessage
 from services import faq_buttons_list, faq_pages_count
@@ -40,7 +42,9 @@ async def get_cancel_button() -> ReplyKeyboardMarkup:
 async def get_main_menu() -> ReplyKeyboardMarkup:
     """Создает клавиатуру основного меню."""
     keyboard = []
-    btn_list = list(MENU_ITEMS.keys()) + list(LINK_ITEMS.keys())
+    btn_list = list(item.value for item in MenuFuncButton) + list(
+        LINK_BUTTONS.keys()
+    )
     btn_idx = 0
     while btn_idx < len(btn_list):
         row = []
@@ -99,26 +103,29 @@ async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
     if page > 2:
         navigation_buttons.append(
             InlineKeyboardButton(
-                text=InlineButtonText.FIRST_PAGE, callback_data="first_page"
+                text=InlineButtonText.FIRST_PAGE,
+                callback_data=PaginationCallback.FIRST_PAGE,
             )
         )
     if page > 1:
         navigation_buttons.append(
             InlineKeyboardButton(
-                text=InlineButtonText.PREV_PAGE, callback_data="prev_page"
+                text=InlineButtonText.PREV_PAGE,
+                callback_data=PaginationCallback.PREV_PAGE,
             )
         )
     if page < pages_count:
         navigation_buttons.append(
             InlineKeyboardButton(
-                text=InlineButtonText.NEXT_PAGE, callback_data="next_page"
+                text=InlineButtonText.NEXT_PAGE,
+                callback_data=PaginationCallback.NEXT_PAGE,
             )
         )
     if page < pages_count - 1:
         navigation_buttons.append(
             InlineKeyboardButton(
                 text=InlineButtonText.LAST_PAGE,
-                callback_data="last_page",
+                callback_data=PaginationCallback.LAST_PAGE,
             )
         )
     keyboard.append(navigation_buttons)
@@ -132,13 +139,28 @@ async def get_communication_way() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text=InlineButtonText.TELEGRAM_QUESTION,
-                callback_data="tg_question",
+                callback_data=MainCallbacks.TG_QUESTION,
             ),
-            InlineKeyboardButton(
-                text=InlineButtonText.EMAIL_QUESTION,
-                callback_data="email_question",
-            ),
+            # ------КНОПКА ВЫБОРА ОБЩЕНИЯ ПО EMAIL----- #
+            # InlineKeyboardButton(
+            #     text=InlineButtonText.EMAIL_QUESTION,
+            #     callback_data=MainCallbacks.EMAIL_QUESTION,
+            # ),
         ]
     ]
     bot_logger.info(msg=MenuLogMessage.CREATE_CUSTOM_QUESTION_KB)
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def get_back_to_faq() -> InlineKeyboardMarkup:
+    """Создаёт кнопку возврата к частым вопросам."""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text=InlineButtonText.BACK_TO_FAQ,
+                callback_data=MainCallbacks.BACK_TO_FAQ,
+            ),
+        ]
+    ]
+    bot_logger.info(msg=MenuLogMessage.CREATE_BACK_TO_FAQ_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
