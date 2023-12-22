@@ -12,12 +12,19 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv(key="TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv(key="ADMIN_CHAT_ID")
 
-# Кнопки меню
-MENU_ITEMS: dict[str, str] = {
-    "частые вопросы": "faq",
-    "подписаться на рассылку": "subscribe",
-}
-LINK_ITEMS: dict[str, LinkButtonAttributes] = {
+
+# Уровень логгера
+LOGGING_LEVEL = logging.INFO
+
+
+# Функциональные кнопки меню
+class MenuFuncButton(str, Enum):
+    FAQ = "частые вопросы"
+    SUBSCRIBE = "подписаться на рассылку"
+
+
+# Ссылочные кнопки меню
+LINK_BUTTONS: dict[str, LinkButtonAttributes] = {
     "попечительство": LinkButtonAttributes(
         text="Условия попечительства можно посмотреть на сайте",
         url="https://predannoeserdce.ru/programmy-prijuta/popechitelstvo/",
@@ -45,8 +52,8 @@ FAQ_PER_PAGE = 5
 
 # Отдельные кнопки
 class OneButtonItems:
-    MENU = "меню"
-    CANCEL = "отмена"
+    MENU = "главное меню"
+    CANCEL = "назад в меню"
 
 
 # Задержки
@@ -60,8 +67,8 @@ FAQ_UPDATE_INTERVAL_MINUTES = 10
 
 # Проверки введенного текста
 class RegexText:
-    USER_FULLNAME = r"(\b[А-Я]{1}[а-я]+\b)"
-    CANCEL = r"^отмена$"
+    USER_FULLNAME = r"(\b[А-ЯЁ]{1}[а-яё]+\b)"
+    CANCEL = rf"^{OneButtonItems.CANCEL}$"
     EMAIL = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     PHONE = r"^\+7\d{10}$"
 
@@ -86,6 +93,8 @@ class MainCallbacks:
     CUSTOM_QUESTION = "custom_question"
     TG_QUESTION = "tg_question"
     EMAIL_QUESTION = "email_question"
+    BACK_TO_FAQ = "back_to_faq"
+    SERVER_ERROR = "server_error"
 
 
 # Настройки логгера:

@@ -1,14 +1,13 @@
 import asyncio
 
-from telegram import Update
+from telegram import Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
 import keyboards as kb
 from constants import (
     ADMIN_CHAT_ID,
-    LINK_ITEMS,
-    MENU_ITEMS,
+    LINK_BUTTONS,
     MENU_SLEEP,
     START_SLEEP,
     ConvState,
@@ -32,7 +31,6 @@ def update_faq() -> None:
     """Обновляет список частых вопросов."""
     global faq_list
     faq_list = get_faq()
-    bot_logger.info(msg=MenuLogMessage.UPDATE_FAQ_LIST)
 
 
 async def handle_show_menu_btn(
@@ -76,23 +74,11 @@ async def handle_alert_message(
     )
 
 
-async def handle_menu_buttons(
+async def handle_text_message(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Обрабатывает нажатие кнопок меню."""
-    menu_keys = list(key.lower() for key in MENU_ITEMS.keys())
-    link_keys = list(key.lower() for key in LINK_ITEMS.keys())
-    if update.message.text.lower() in menu_keys:
-        await globals()[MENU_ITEMS[update.message.text.lower()]](
-            update, context
-        )
-    elif update.message.text.lower() in link_keys:
-        await handle_url_button(update=update, context=context)
-    elif update.message.text.lower() == OneButtonItems.MENU:
-        await handle_show_main_menu(update=update, context=context)
-    elif update.message.text.lower() == OneButtonItems.CANCEL:
-        await conv_cancel(update=update, context=context)
-    elif update.message.reply_to_message:
+    """Обрабатывает текстовые сообщения."""
+    if update.message.reply_to_message:
         await handle_admin_answer(update=update, context=context)
     else:
         await handle_alert_message(update=update, context=context)
@@ -107,28 +93,15 @@ async def handle_url_button(
     """Обрабатывает нажатие кнопки с переходом на сайт."""
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Нажмите на кнопку, чтобы перейди на сайт.",
+        text=MESSAGES["url"],
         reply_markup=await kb.get_url_button(
-            btn_attrs=LINK_ITEMS[update.message.text.lower()],
+            btn_attrs=LINK_BUTTONS[update.message.text.lower()],
         ),
     )
     bot_logger.info(msg=MenuLogMessage.PROCESSING_BTN % update.message.text)
     await handle_show_main_menu(
         update=update, context=context, delay=MENU_SLEEP
     )
-
-
-async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обрабатывает нажатие кнопки `Частые вопросы`."""
-    page = 1
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Выберите вопрос, который вас интересует:",
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page),
-    )
-    context.user_data["page"] = page
-    bot_logger.info(msg=MenuLogMessage.PROCESSING_BTN % (update.message.text,))
-    await handle_show_menu_btn(update=update, context=context)
 
 
 async def subscribe(
@@ -142,42 +115,66 @@ async def subscribe(
     await handle_show_main_menu(update=update, context=context, delay=1),
 
 
+async def handle_faq_button(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> Message | None:
+    """Обрабатывает нажатие кнопки `Частые вопросы`."""
+    query = update.callback_query
+    order = query.data if query else None
+    pages_count = await faq_pages_count(faq_list=faq_list)
+    page = context.user_data.get("page", None)
+    if not page or not order:
+        page = 1
+        context.user_data["page"] = page
+        return await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=MESSAGES["faq"],
+            reply_markup=await kb.get_faq_menu(
+                faq_questions=faq_list, page=page
+            ),
+        )
+    elif order == PaginationCallback.FIRST_PAGE:
+        page = 1
+    elif order == PaginationCallback.LAST_PAGE:
+        page = pages_count
+    elif order == PaginationCallback.NEXT_PAGE:
+        page += 1
+    elif order == PaginationCallback.PREV_PAGE:
+        page -= 1
+    await update.effective_message.edit_text(
+        text=MESSAGES["faq"],
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page),
+    )
+    context.user_data["page"] = page
+    await query.answer()
+
+
 async def handle_faq_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Обрабатывает частые вопросы. Выдаёт ответы."""
     query = update.callback_query
     order = query.data
-    if order != MainCallbacks.CUSTOM_QUESTION or not order.isdigit():
-        await handle_faq_pagination(update=update, context=context)
-        return None
-    await query.edit_message_text(
-        text=ConversationTextMessage.COMMUNICATION_WAY,
-        reply_markup=await kb.get_communication_way(),
-    )
-    await query.answer()
-
-
-async def handle_faq_pagination(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Пагинация кнопок с частыми вопросами."""
-    query = update.callback_query
-    order = query.data
-    pages_count = await faq_pages_count(faq_list=faq_list)
-    page = context.user_data.get("page", None)
-    if order == PaginationCallback.NEXT_PAGE:
-        page += 1
-    if order == PaginationCallback.PREV_PAGE:
-        page -= 1
-    if order == PaginationCallback.FIRST_PAGE:
-        page = 1
-    if order == PaginationCallback.LAST_PAGE:
-        page = pages_count
-    await update.effective_message.edit_reply_markup(
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page)
-    )
-    context.user_data["page"] = page
+    if order.isdigit():
+        data = tuple(
+            value
+            for item in faq_list
+            for _, value in item.items()
+            if item["order"] == int(order)
+        )
+        text = ConversationTextMessage.ANSWER_BY_FAQ % (data[0], data[1])
+        await query.edit_message_text(
+            text=text,
+            reply_markup=await kb.get_back_to_faq(),
+            parse_mode=ParseMode.HTML,
+        )
+    elif order != MainCallbacks.CUSTOM_QUESTION:
+        return await handle_faq_button(update=update, context=context)
+    else:
+        await query.edit_message_text(
+            text=ConversationTextMessage.COMMUNICATION_WAY,
+            reply_markup=await kb.get_communication_way(),
+        )
     await query.answer()
 
 
@@ -339,7 +336,7 @@ async def conv_cancel(
     )
     await update.message.reply_text(
         text=ConversationTextMessage.CANCEL,
-        reply_markup=await kb.get_menu_button(),
+        reply_markup=await kb.get_main_menu(),
     )
     return ConversationHandler.END
 
@@ -363,3 +360,24 @@ async def handle_admin_answer(
         reply_markup=await kb.get_main_menu(),
     )
     bot_logger.info(msg=ConversationLogMessage.ANSWER_FROM_ADMIN % to_chat_id)
+
+
+async def handle_error_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Обрабатывает ошибку получения списка вопросов."""
+    query = update.callback_query
+    await context.bot.send_message(
+        chat_id=ADMIN_CHAT_ID,
+        text=ConversationTextMessage.SERVER_ERROR,
+        reply_markup=await kb.remove_menu(),
+    )
+    bot_logger.info(msg=ConversationLogMessage.ERROR_TO_ADMIN)
+    await query.edit_message_text(
+        text=ConversationTextMessage.ERROR_THANKS,
+        # reply_markup=await kb.remove_menu(),
+    )
+    query.answer()
+    await handle_show_main_menu(
+        update=update, context=context, delay=MENU_SLEEP
+    )
