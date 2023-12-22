@@ -108,6 +108,7 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
     stop_scheduler.short_description = "Остановить планировщик"
     stop_scheduler.label = 'Остановить планировщик'
 
+
 delete_selected.short_description = 'Удалить выбранное'
 
 

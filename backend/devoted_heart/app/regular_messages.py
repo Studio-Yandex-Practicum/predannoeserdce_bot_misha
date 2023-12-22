@@ -28,7 +28,7 @@ URLD = 'https://api.thedogapi.com/v1/images/search'
 URLC = 'https://api.thecatapi.com/v1/images/search'
 URLTEXT = 'https://api.forismatic.com/api/1.0/?method=getQuote&format=jsonp&jsonp=parseQuote'  # noqa
 SLEEP_BETWEEN = 0.4
-SCHEDULER_PERIOD = 60 # seconds
+SCHEDULER_PERIOD = 60  # seconds
 CHOICES = [1, 2, 3, 4]  # количество рэндомных фнукций
 
 logging.basicConfig(

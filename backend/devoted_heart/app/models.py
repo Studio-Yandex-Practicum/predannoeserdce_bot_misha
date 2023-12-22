@@ -71,7 +71,6 @@ class Customer(models.Model):
         verbose_name_plural = 'Клиенты'
         verbose_name = 'Клиент'
 
-
     def __str__(self) -> str:
         return f'Имя: {self.name}'
 
