@@ -11,6 +11,8 @@ load_dotenv()
 # Константы для телеграма
 TELEGRAM_TOKEN = os.getenv(key="TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv(key="ADMIN_CHAT_ID")
+ADMIN_LOGIN = os.getenv('ADMIN_LOGIN')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
 
 # Кнопки меню
 MENU_ITEMS: dict[str, str] = {
@@ -53,6 +55,7 @@ class OneButtonItems:
 START_SLEEP = 1
 MENU_SLEEP = 3
 
+
 # Получение и обновление списка вопросов
 SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")
 FAQ_UPDATE_INTERVAL_MINUTES = 10
@@ -73,6 +76,7 @@ class ConvState(int, Enum):
     SUBJECT = 2
     QUESTION = 3
     SEND = 4
+    SUBSCRIBE = 5
 
 
 class PaginationCallback:
@@ -97,3 +101,11 @@ class LogSetting:
     ENCODING = "utf8"
     FILESIZE = 1024 * 1024
     FILECOUNT = 3
+
+
+# Токен
+SERVER_API_TOKEN_URL = os.getenv('SERVER_API_TOKEN_URL')
+TOKEN_UPDATE = 12 # в часах
+
+#Подписка
+SERVER_API_CUSTOMER_URL = os.getenv('SERVER_API_CUSTOMER_URL')

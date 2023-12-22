@@ -1,19 +1,10 @@
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-    ReplyKeyboardRemove,
-)
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
+                      KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove)
 
-from constants import (
-    FAQ_PER_PAGE,
-    LINK_ITEMS,
-    MENU_ITEMS,
-    MENU_LAYOUT,
-    OneButtonItems,
-)
-from message_config import InlineButtonText, MenuLogMessage, PlaceholderMessage
+from constants import (FAQ_PER_PAGE, LINK_ITEMS, MENU_ITEMS, MENU_LAYOUT,
+                       OneButtonItems)
+from message_config import (InlineButtonText, MenuLogMessage,
+                            PlaceholderMessage, SubTextButton)
 from services import faq_buttons_list, faq_pages_count
 from settings import bot_logger
 from utils import LinkButtonAttributes
@@ -142,3 +133,12 @@ async def get_communication_way() -> InlineKeyboardMarkup:
     ]
     bot_logger.info(msg=MenuLogMessage.CREATE_CUSTOM_QUESTION_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def get_sub_buttons():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=SubTextButton.RETURN)],
+            [KeyboardButton(text=OneButtonItems.MENU.upper())]
+        ], resize_keyboard=True
+    )

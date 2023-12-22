@@ -2,40 +2,21 @@
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    ConversationHandler,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import (ApplicationBuilder, CallbackQueryHandler,
+                          CommandHandler, ContextTypes, ConversationHandler,
+                          MessageHandler, filters)
 
 import keyboards as kb
-from constants import (
-    FAQ_UPDATE_INTERVAL_MINUTES,
-    START_SLEEP,
-    TELEGRAM_TOKEN,
-    ConvState,
-    MainCallbacks,
-    RegexText,
-)
-from handlers import (
-    conv_cancel,
-    conv_end,
-    conv_get_email,
-    conv_get_phone,
-    conv_get_question,
-    conv_get_subject,
-    handle_alert_message,
-    handle_conv_callback,
-    handle_faq_callback,
-    handle_menu_buttons,
-    handle_show_main_menu,
-    update_faq,
-)
-from message_config import MESSAGES
+from constants import (FAQ_UPDATE_INTERVAL_MINUTES, START_SLEEP,
+                       TELEGRAM_TOKEN, TOKEN_UPDATE, ConvState, MainCallbacks,
+                       OneButtonItems, RegexText)
+from handlers import (conv_cancel, conv_end, conv_get_email, conv_get_phone,
+                      conv_get_question, conv_get_subject,
+                      handle_alert_message, handle_conv_callback,
+                      handle_conv_message, handle_faq_callback,
+                      handle_menu_buttons, handle_show_main_menu, update_faq)
+from message_config import MESSAGES, SubTextButton
+from requests_db import get_token
 
 scheduller = AsyncIOScheduler()
 scheduller.add_job(
@@ -43,8 +24,14 @@ scheduller.add_job(
     trigger="interval",
     minutes=FAQ_UPDATE_INTERVAL_MINUTES,
 )
+scheduller.add_job(
+    func=get_token,
+    trigger="interval",
+    hours=TOKEN_UPDATE,
+)
 scheduller.start()
 update_faq()
+get_token()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -62,7 +49,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Запуск бота."""
     application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
-    cancel_pattern = re.compile(pattern=RegexText.CANCEL, flags=re.IGNORECASE)
+    cancel_pattern = re.compile(
+        pattern=RegexText.CANCEL,
+        flags=re.IGNORECASE
+        )
+    skip_cancel_pattern = re.compile(
+        rf"^(?!.*\b{OneButtonItems.CANCEL.upper()}\b).*$"
+        )
     handlers = [
         ConversationHandler(
             entry_points=[
@@ -74,38 +67,45 @@ def main() -> None:
                     callback=handle_conv_callback,
                     pattern=MainCallbacks.EMAIL_QUESTION,
                 ),
+                MessageHandler(
+                    filters.Text(
+                        f"{SubTextButton.START} | {SubTextButton.RETURN}"
+                        ),
+                    handle_conv_message,
+                )
             ],
             states={
                 ConvState.EMAIL: [
                     MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
+                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
                         callback=conv_get_email,
                     ),
                 ],
                 ConvState.PHONE: [
                     MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
+                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
                         callback=conv_get_phone,
                     ),
                 ],
                 ConvState.SUBJECT: [
                     MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
+                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
                         callback=conv_get_subject,
                     )
                 ],
                 ConvState.QUESTION: [
                     MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
+                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
                         callback=conv_get_question,
                     )
                 ],
                 ConvState.SEND: [
                     MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
+                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
                         callback=conv_end,
                     )
                 ],
+                
             },
             fallbacks=[
                 MessageHandler(
