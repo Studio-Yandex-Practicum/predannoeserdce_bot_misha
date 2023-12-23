@@ -111,14 +111,40 @@ def main() -> None:
                 MessageHandler(
                     filters=(filters.Regex(pattern=cancel_pattern)),
                     callback=conv_cancel,
-                )
+                ),
+                CommandHandler(command="menu", callback=conv_cancel),
             ],
         ),
         CommandHandler(command="start", callback=start),
         CommandHandler(command="menu", callback=handle_show_main_menu),
         MessageHandler(
+            filters=(
+                filters.Regex(
+                    pattern=re.compile(
+                        pattern=rf"{MenuFuncButton.FAQ.value}",
+                        flags=re.IGNORECASE,
+                    )
+                )
+            ),
+            callback=handle_faq_button,
+        ),
+        MessageHandler(
+            filters=(
+                filters.Regex(
+                    pattern=re.compile(
+                        pattern=rf"{'|'.join(LINK_BUTTONS.keys())}",
+                        flags=re.IGNORECASE,
+                    )
+                )
+            ),
+            callback=handle_url_button,
+        ),
+        MessageHandler(
             filters=(filters.TEXT & ~filters.COMMAND),
-            callback=handle_menu_buttons,
+            callback=handle_text_message,
+        ),
+        CallbackQueryHandler(
+            callback=handle_error_callback, pattern=MainCallbacks.SERVER_ERROR
         ),
         CallbackQueryHandler(callback=handle_faq_callback),
         MessageHandler(

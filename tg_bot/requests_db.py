@@ -5,9 +5,11 @@ from http import HTTPStatus
 import requests
 from requests import Response
 
+
 from constants import (ADMIN_LOGIN, ADMIN_PASSWORD, SERVER_API_FAQ_URL,
                        SERVER_API_TOKEN_URL)
 from message_config import MenuLogMessage
+
 from settings import bot_logger
 
 
@@ -24,16 +26,18 @@ def get_faq() -> list[dict[str, str | int]]:
             bot_logger.error(
                 msg=MenuLogMessage.SERVER_ERROR % (response.status_code,)
             )
-            # TODO Обработать ошибку сервера.
-            return {
-                "Ошибка. Нажмите, "
-                "чтобы сообщить администратору": "server_error"
-            }
+            return [
+                {
+                    "question": MESSAGES["server_error"],
+                    "order": MainCallbacks.SERVER_ERROR,
+                }
+            ]
         data = response.json()
         results += data["results"]
         if not data["next"]:
             break
         url = data["next"]
+    bot_logger.info(msg=MenuLogMessage.UPDATE_FAQ_LIST)
     return results
 
 

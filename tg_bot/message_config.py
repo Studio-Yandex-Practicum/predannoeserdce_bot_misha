@@ -10,6 +10,9 @@
         "Если хотите задать мне вопрос - выберите в меню "
         'раздел "Частые вопросы"'
     ),
+    "faq": "Выберите вопрос, который вас интересует:",
+    "url": "Нажмите на кнопку, чтобы перейди на сайт.",
+    "server_error": "Ошибка. Нажмите, чтобы сообщить администратору",
 }
 
 
@@ -40,6 +43,9 @@ class ConversationTextMessage:
         "<i>Пожалуйста, не отвечайте на это сообщение. Если вы хотите задать "
         "новый вопрос, выберите в меню пункт Частые вопросы.</i>"
     )
+    ANSWER_BY_FAQ = "<b>Вопрос:\n</b>%s\n\n<b>Ответ:\n</b>%s"
+    SERVER_ERROR = "Произошла ошибка в работе бота. Сообщите в поддержку"
+    ERROR_THANKS = "Спасибо! Благодаря вам скоро мы все исправим!"
 
 
 class MenuLogMessage:
@@ -55,6 +61,7 @@ class MenuLogMessage:
     SERVER_ERROR = "Ошибка получения данных с сервера: %s"
     UPDATE_FAQ_LIST = "Список частых вопросов обновлён"
     CREATE_CUSTOM_QUESTION_KB = "Создана клавиатура нового вопроса"
+    CREATE_BACK_TO_FAQ_KB = "Создана кнопка возврата к частым вопросам"
 
 
 class ConversationLogMessage:
@@ -69,6 +76,7 @@ class ConversationLogMessage:
     END = "Общение с пользователем id:%s завершено"
     CANCEL = "Общение прервано пользователем id:%s"
     ANSWER_FROM_ADMIN = "Пользователю %s отправлен ответ администратора"
+    ERROR_TO_ADMIN = "Сообщение об ошибке отправлено администратору"
 
 
 class PlaceholderMessage:
@@ -84,7 +92,7 @@ class InlineButtonText:
     NEXT_PAGE = "След.  >"
     TELEGRAM_QUESTION = "Telegram"
     EMAIL_QUESTION = "Email"
-
+    BACK_TO_FAQ = "Назад к вопросам"
 
 class SubMessageText:
     USER_DATE = "Ваши данные:"
