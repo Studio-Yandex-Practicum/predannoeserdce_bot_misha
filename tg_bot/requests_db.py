@@ -1,10 +1,18 @@
+import json
+import os
 from http import HTTPStatus
 
 import requests
 from requests import Response
 
+<<<<<<< HEAD
 from constants import SERVER_API_FAQ_URL, MainCallbacks
 from message_config import MESSAGES, MenuLogMessage
+=======
+from constants import (ADMIN_LOGIN, ADMIN_PASSWORD, SERVER_API_FAQ_URL,
+                       SERVER_API_TOKEN_URL)
+from message_config import MenuLogMessage
+>>>>>>> feature/bot/subs
 from settings import bot_logger
 
 
@@ -34,3 +42,19 @@ def get_faq() -> list[dict[str, str | int]]:
         url = data["next"]
     bot_logger.info(msg=MenuLogMessage.UPDATE_FAQ_LIST)
     return results
+
+
+def get_token():
+    
+    token_url = SERVER_API_TOKEN_URL
+    credentials = {
+        'email': ADMIN_LOGIN,
+        'password': ADMIN_PASSWORD
+    }
+    response = requests.post(token_url, data=credentials)
+    print(response.text)
+    if response.status_code == 200:
+        token_data = response.json()
+        token = token_data.get('auth_token')
+        os.environ['ADMIN_TOKEN'] = token
+        bot_logger.info(msg="Токен получен")

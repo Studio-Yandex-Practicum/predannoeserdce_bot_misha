@@ -18,7 +18,7 @@
 
 class ConversationTextMessage:
     COMMUNICATION_WAY = "Выберите способ общения:"
-    WRITE_FULLNAME = "Пожалуйста, представьтесь. \n Напишите Имя и Фамилию."
+    WRITE_FULLNAME = "Пожалуйста, представьтесь. \nНапишите Имя и Фамилию."
     WRITE_EMAIL = "Приятно познакомиться!\nТеперь напишите свой e-mail."
     WRITE_PHONE = "Напишите номер своего телефона в формате +7ХХХХХХХХХХ."
     WRITE_SUBJECT = "Введите тему сообщения."
@@ -93,3 +93,15 @@ class InlineButtonText:
     TELEGRAM_QUESTION = "Telegram"
     EMAIL_QUESTION = "Email"
     BACK_TO_FAQ = "Назад к вопросам"
+
+
+class SubMessageText:
+    USER_DATE = "Ваши данные:"
+    DONE = "Мяу, вы успешно подписаны на рассылку сообщений. Вот ваши данные:"
+    ERROR = "Мррр, что-то пошло не так:\n"
+
+
+class SubTextButton:
+    START = "Подписаться на рассылку"
+    RETURN = "Попробовать еще раз"
+    CANCEL = "ОТМЕНА"

@@ -1,0 +1,14 @@
+version: '3.3'
+
+services:
+  bot:
+    build: .
+    container_name: tg-bot
+    command: python main.py
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    restart: always

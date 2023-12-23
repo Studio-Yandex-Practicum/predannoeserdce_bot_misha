@@ -15,7 +15,12 @@ from constants import (
     OneButtonItems,
     PaginationCallback,
 )
-from message_config import InlineButtonText, MenuLogMessage, PlaceholderMessage
+from message_config import (
+    InlineButtonText,
+    MenuLogMessage,
+    PlaceholderMessage,
+    SubTextButton,
+)
 from services import faq_buttons_list, faq_pages_count
 from settings import bot_logger
 from utils import LinkButtonAttributes
@@ -164,3 +169,13 @@ async def get_back_to_faq() -> InlineKeyboardMarkup:
     ]
     bot_logger.info(msg=MenuLogMessage.CREATE_BACK_TO_FAQ_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def get_sub_buttons():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=SubTextButton.RETURN)],
+            [KeyboardButton(text=OneButtonItems.MENU.upper())],
+        ],
+        resize_keyboard=True,
+    )

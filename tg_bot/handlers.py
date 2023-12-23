@@ -1,5 +1,8 @@
 import asyncio
+import os
+from http import HTTPStatus
 
+import requests
 from telegram import Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
@@ -9,6 +12,7 @@ from constants import (
     ADMIN_CHAT_ID,
     LINK_BUTTONS,
     MENU_SLEEP,
+    SERVER_API_CUSTOMER_URL,
     START_SLEEP,
     ConvState,
     MainCallbacks,
@@ -20,9 +24,19 @@ from message_config import (
     ConversationLogMessage,
     ConversationTextMessage,
     MenuLogMessage,
+    SubMessageText,
 )
 from requests_db import get_faq
-from services import faq_pages_count, send_question_email, send_question_tg
+from services import (
+    facts_to_str,
+    faq_pages_count,
+    format_error_messages,
+    get_data_to_send,
+    get_data_to_user,
+    get_headers,
+    send_question_email,
+    send_question_tg,
+)
 from settings import bot_logger
 from validators import email_validate, fullname_validate, phone_validate
 
@@ -104,15 +118,15 @@ async def handle_url_button(
     )
 
 
-async def subscribe(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Обрабатывает нажатие кнопки `Подписаться на рассылку`."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=MenuLogMessage.STUB_BTN % update.message.text,
-    )
-    await handle_show_main_menu(update=update, context=context, delay=1),
+# async def subscribe(
+#     update: Update, context: ContextTypes.DEFAULT_TYPE
+# ) -> None:
+#     """Обрабатывает нажатие кнопки `Подписаться на рассылку`."""
+#     await context.bot.send_message(
+#         chat_id=update.effective_chat.id,
+#         text=MenuLogMessage.STUB_BTN % update.message.text,
+#     )
+#     await handle_show_main_menu(update=update, context=context, delay=1),
 
 
 async def handle_faq_button(
@@ -199,15 +213,32 @@ async def handle_conv_callback(
     return ConvState.EMAIL
 
 
+async def handle_conv_message(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """
+    Начало общения, в котором пользователь подписывается
+    на рассылку сообщений.
+    Запрос на получение полного имени пользователя.
+    """
+    query = update.message
+    context.user_data["callback"] = query.text
+    context.user_data["user_id"] = query.from_user.id
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=ConversationTextMessage.WRITE_FULLNAME,
+        reply_markup=await kb.get_cancel_button(),
+    )
+    bot_logger.info(msg=ConversationLogMessage.START % query.from_user.id)
+    return ConvState.EMAIL
+
+
 async def conv_get_email(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Запрос на получение email."""
 
     while not await fullname_validate(update=update, context=context):
-        if update.message.text.lower() == OneButtonItems.CANCEL:
-            await conv_cancel(update=update, context=context)
-            return ConversationHandler.END
         await update.message.delete()
         bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
         return ConvState.EMAIL
@@ -228,9 +259,6 @@ async def conv_get_phone(
 ) -> int:
     """Запрос на получение номера телефона."""
     while not await email_validate(update=update, context=context):
-        if update.message.text.lower() == OneButtonItems.CANCEL:
-            await conv_cancel(update=update, context=context)
-            return ConversationHandler.END
         await update.message.delete()
         bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
         return ConvState.PHONE
@@ -246,22 +274,45 @@ async def conv_get_phone(
     return ConvState.SUBJECT
 
 
+async def subscribe(user_data):
+    token = os.getenv("ADMIN_TOKEN")
+    response = requests.post(
+        SERVER_API_CUSTOMER_URL,
+        json=get_data_to_send(user_data),
+        headers=get_headers(token),
+    )
+    print(response)
+    if response.status_code == HTTPStatus.CREATED:
+        facts = get_data_to_user(user_data)
+        text = f"{SubMessageText.DONE}{facts_to_str(facts)}"
+        keyboard = await kb.get_menu_button()
+    else:
+        error = format_error_messages(response.text)
+        text = f"{SubMessageText.ERROR}{error}"
+        keyboard = await kb.get_sub_buttons()
+
+    return text, keyboard
+
+
 async def conv_get_subject(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Запрос на получение темы сообщения."""
-    while not await phone_validate(update=update, context=context):
-        if update.message.text.lower() == OneButtonItems.CANCEL:
-            await conv_cancel(update=update, context=context)
-            return ConversationHandler.END
-        await update.message.delete()
-        bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
-        return ConvState.SUBJECT
+    # while not await phone_validate(update=update, context=context):
+    #     await update.message.delete()
+    #     bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
+    #     return ConvState.SUBJECT
     context.user_data["user_phone"] = update.message.text
+    user_data = context.user_data
     bot_logger.info(
         msg=ConversationLogMessage.RECEIVED_PHONE
         % context.user_data["user_id"]
     )
+    if context.user_data["callback"] == "Подписаться на рассылку":
+        text, keyboard = await subscribe(user_data)
+        await update.message.reply_text(text=text, reply_markup=keyboard)
+        return ConversationHandler.END
+
     await update.message.reply_text(
         text=ConversationTextMessage.WRITE_SUBJECT,
         reply_markup=await kb.get_cancel_button(),
@@ -273,9 +324,6 @@ async def conv_get_question(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Получение сообщения от пользователя (кастомный вопрос)."""
-    if update.message.text.lower() == OneButtonItems.CANCEL:
-        await conv_cancel(update=update, context=context)
-        return ConversationHandler.END
     context.user_data["subject"] = update.message.text
     bot_logger.info(
         msg=ConversationLogMessage.RECEIVED_SUBJECT
@@ -291,9 +339,6 @@ async def conv_get_question(
 
 async def conv_end(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Завершение общения."""
-    if update.message.text.lower() == OneButtonItems.CANCEL:
-        await conv_cancel(update=update, context=context)
-        return ConversationHandler.END
     context.user_data["question"] = update.message.text
     bot_logger.info(
         msg=ConversationLogMessage.RECEIVED_QUESTION
