@@ -59,7 +59,7 @@ class MenuLogMessage:
     CREATE_FAQ_KB = "Создана страница №%s клавиатуры частых вопросов"
     UNKNOWN_ERROR = "Что-то пошло не так! Ошибка: %s"
     SERVER_ERROR = "Ошибка получения данных с сервера: %s"
-    UPDATE_FAQ_LIST = "Список частых вопросов обновлён"
+    UPDATE_FAQ_DICT = "Список частых вопросов обновлён"
     CREATE_CUSTOM_QUESTION_KB = "Создана клавиатура нового вопроса"
     CREATE_BACK_TO_FAQ_KB = "Создана кнопка возврата к частым вопросам"
 

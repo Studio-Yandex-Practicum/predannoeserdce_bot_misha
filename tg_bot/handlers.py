@@ -43,8 +43,8 @@ from validators import email_validate, fullname_validate, phone_validate
 
 def update_faq() -> None:
     """Обновляет список частых вопросов."""
-    global faq_list
-    faq_list = get_faq()
+    global faq_dict
+    faq_dict = get_faq()
 
 
 async def handle_show_menu_btn(
@@ -135,7 +135,7 @@ async def handle_faq_button(
     """Обрабатывает нажатие кнопки `Частые вопросы`."""
     query = update.callback_query
     order = query.data if query else None
-    pages_count = await faq_pages_count(faq_list=faq_list)
+    pages_count = await faq_pages_count(faq_dict=faq_dict)
     page = context.user_data.get("page", None)
     if not page or not order:
         page = 1
@@ -144,7 +144,7 @@ async def handle_faq_button(
             chat_id=update.effective_chat.id,
             text=MESSAGES["faq"],
             reply_markup=await kb.get_faq_menu(
-                faq_questions=faq_list, page=page
+                faq_questions=faq_dict, page=page
             ),
         )
     elif order == PaginationCallback.FIRST_PAGE:
@@ -157,7 +157,7 @@ async def handle_faq_button(
         page -= 1
     await update.effective_message.edit_text(
         text=MESSAGES["faq"],
-        reply_markup=await kb.get_faq_menu(faq_questions=faq_list, page=page),
+        reply_markup=await kb.get_faq_menu(faq_questions=faq_dict, page=page),
     )
     context.user_data["page"] = page
     await query.answer()
@@ -170,13 +170,17 @@ async def handle_faq_callback(
     query = update.callback_query
     order = query.data
     if order.isdigit():
-        data = tuple(
-            value
-            for item in faq_list
-            for _, value in item.items()
-            if item["order"] == int(order)
+        data = faq_dict[order]
+        # data = tuple(
+        #     value
+        #     for item in faq_dict
+        #     for _, value in item.items()
+        #     if item["order"] == int(order)
+        # )
+        text = ConversationTextMessage.ANSWER_BY_FAQ % (
+            tuple(data.values())[:2]
         )
-        text = ConversationTextMessage.ANSWER_BY_FAQ % (data[0], data[1])
+        # text = ConversationTextMessage.ANSWER_BY_FAQ % (data[0], data[1])
         await query.edit_message_text(
             text=text,
             reply_markup=await kb.get_back_to_faq(),

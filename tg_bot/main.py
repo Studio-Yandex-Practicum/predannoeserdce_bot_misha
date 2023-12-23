@@ -38,7 +38,6 @@ from handlers import (
     handle_error_callback,
     handle_faq_button,
     handle_faq_callback,
-    handle_menu_buttons,
     handle_show_main_menu,
     handle_text_message,
     handle_url_button,

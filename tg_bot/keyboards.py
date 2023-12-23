@@ -21,7 +21,7 @@ from message_config import (
     PlaceholderMessage,
     SubTextButton,
 )
-from services import faq_buttons_list, faq_pages_count
+from services import faq_buttons, faq_pages_count
 from settings import bot_logger
 from utils import LinkButtonAttributes
 
@@ -87,18 +87,30 @@ async def get_url_button(
 
 async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
     """Создает клавиатуру с частыми вопросами."""
-    buttons = await faq_buttons_list(faq_list=faq_questions)
-    pages_count = await faq_pages_count(faq_list=faq_questions)
+    buttons = await faq_buttons(faq_dict=faq_questions)
+    pages_count = await faq_pages_count(faq_dict=faq_questions)
     start_idx = (page - 1) * FAQ_PER_PAGE
     end_idx = start_idx + FAQ_PER_PAGE
-    page_faq = buttons[start_idx:end_idx]
+    page_faq = list(buttons.items())[start_idx:end_idx]
     keyboard = [
         [
             InlineKeyboardButton(
-                text=item["question"], callback_data=item["order"]
+                text=item[-1]["question"], callback_data=item[0]
             )
         ]
         for item in page_faq
+        # [
+        #     InlineKeyboardButton(
+        #         text=item[-1]["question"], callback_data=item[-1]["order"]
+        #     )
+        # ]
+        # for item in page_faq
+        # [
+        #     InlineKeyboardButton(
+        #         text=item["question"], callback_data=item["order"]
+        #     )
+        # ]
+        # for item in page_faq
     ]
     if pages_count == 1:
         bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)

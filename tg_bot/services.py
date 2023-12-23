@@ -1,5 +1,4 @@
 import json
-from typing import Dict
 
 from telegram import Update
 from telegram.constants import ParseMode
@@ -7,8 +6,11 @@ from telegram.ext import ContextTypes
 
 import keyboards as kb
 from constants import ADMIN_CHAT_ID, FAQ_PER_PAGE, MainCallbacks
-from message_config import (ConversationLogMessage, InlineButtonText,
-                            MenuLogMessage)
+from message_config import (
+    ConversationLogMessage,
+    InlineButtonText,
+    MenuLogMessage,
+)
 from settings import bot_logger
 
 
@@ -48,57 +50,59 @@ async def send_question_email(
     bot_logger.info(msg=ConversationLogMessage.SEND_QUESTION % data["user_id"])
 
 
-async def faq_pages_count(faq_list: list[dict]) -> int:
+async def faq_pages_count(faq_dict: dict) -> int:
     return (
-        len(await faq_buttons_list(faq_list=faq_list)) + FAQ_PER_PAGE - 1
+        len(await faq_buttons(faq_dict=faq_dict)) + FAQ_PER_PAGE - 1
     ) // FAQ_PER_PAGE
 
 
-async def faq_buttons_list(faq_list) -> list[dict]:
-    return faq_list + [
+async def faq_buttons(faq_dict) -> dict:
+    faq_dict.update(
         {
-            "question": InlineButtonText.CUSTOM_QUESTION,
-            "order": MainCallbacks.CUSTOM_QUESTION,
+            MainCallbacks.CUSTOM_QUESTION: {
+                "question": InlineButtonText.CUSTOM_QUESTION,
+            }
         }
-    ]
+    )
+    return faq_dict
 
 
-def facts_to_str(user_data: Dict[str, str]) -> str:
+def facts_to_str(user_data: dict[str, str]) -> str:
     facts = [f"{key} - {value}" for key, value in user_data.items()]
     return "\n".join(facts).join(["\n", "\n"])
 
 
-def format_error_messages(text):
+def format_error_messages(text) -> str:
     errors = json.loads(text)
     error_messages = []
     for values in errors.values():
         for message in values:
             error_messages.append(message)
-    return '\n'.join(error_messages)
+    return "\n".join(error_messages)
 
 
-def get_data_to_send(user_data: Dict[str, str]):
+def get_data_to_send(user_data: dict[str, str]) -> dict[str, str]:
     data_to_send = {
-        'email': user_data['user_email'],
-        'name': user_data['user_fullname'],
-        'phone': user_data['user_phone'],
-        'tg_id': user_data['user_id']
+        "email": user_data["user_email"],
+        "name": user_data["user_fullname"],
+        "phone": user_data["user_phone"],
+        "tg_id": user_data["user_id"],
     }
     return data_to_send
 
 
-def get_data_to_user(user_data: Dict[str, str]):
+def get_data_to_user(user_data: dict[str, str]):
     data_to_user = {
-        'Email': user_data['user_email'],
-        'Имя': user_data['user_fullname'],
-        'Телефон': user_data['user_phone'],
+        "Email": user_data["user_email"],
+        "Имя": user_data["user_fullname"],
+        "Телефон": user_data["user_phone"],
     }
     return data_to_user
 
 
-def get_headers(token):
+def get_headers(token) -> dict[str, str]:
     headers = {
-        'Authorization': f'Token {token}',
-        'Content-Type': 'application/json'
+        "Authorization": f"Token {token}",
+        "Content-Type": "application/json",
     }
     return headers
