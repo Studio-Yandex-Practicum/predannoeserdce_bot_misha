@@ -40,6 +40,7 @@ from handlers import (
     handle_text_message,
     handle_url_button,
     update_faq,
+    unsubscribe,
 )
 from message_config import MainMessage
 from requests_db import get_token
@@ -156,6 +157,17 @@ def main() -> None:
                 )
             ),
             callback=handle_faq_button,
+        ),
+        MessageHandler(
+            filters=(
+                filters.Regex(
+                    pattern=re.compile(
+                        pattern=rf"{MenuFuncButton.UNSUBSCRIBE.value}",
+                        flags=re.IGNORECASE,
+                    )
+                )
+            ),
+            callback=unsubscribe,
         ),
         MessageHandler(
             filters=(

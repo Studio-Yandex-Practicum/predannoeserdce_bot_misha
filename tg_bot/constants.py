@@ -19,6 +19,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 class MenuFuncButton(str, Enum):
     FAQ = "частые вопросы"
     SUBSCRIBE = "подписаться на рассылку"
+    UNSUBSCRIBE = "отписаться"
 
 
 # Ссылочные кнопки меню
@@ -75,6 +76,7 @@ TOKEN_UPDATE_HOURS = 12
 
 # Подписка
 SERVER_API_CUSTOMER_URL = os.getenv(key="SERVER_API_CUSTOMER_URL")
+SERVER_API_SUBS_URL = os.getenv(key='SERVER_API_SUBS_URL')
 
 
 # Проверки введенного текста

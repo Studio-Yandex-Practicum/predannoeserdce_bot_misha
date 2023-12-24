@@ -9,9 +9,12 @@ from constants import (
     ADMIN_PASSWORD,
     SERVER_API_FAQ_URL,
     SERVER_API_TOKEN_URL,
+    SERVER_API_SUBS_URL,
+    SERVER_API_CUSTOMER_URL,
     MainCallbacks,
 )
 from message_config import MainMessage, BotLogMessage
+from services import get_headers
 from settings import bot_logger
 
 
@@ -55,3 +58,23 @@ def get_token() -> None:
     token = token_data.get("auth_token")
     os.environ["ADMIN_TOKEN"] = token
     bot_logger.info(msg=BotLogMessage.TOKEN_RECEIVED)
+
+
+def check_subscribe(user_id):
+    subscribe_url = f'{SERVER_API_SUBS_URL}{user_id}'
+    token = os.getenv(key="ADMIN_TOKEN")
+    response = requests.get(
+        url=subscribe_url,
+        headers=get_headers(token=token),
+    )
+    return response
+
+
+def delete_subscribe(user_id):
+    subscribe_url = f'{SERVER_API_SUBS_URL}{user_id}'
+    token = os.getenv(key="ADMIN_TOKEN")
+    response = requests.delete(
+        url=subscribe_url,
+        headers=get_headers(token=token),
+    )
+    return response

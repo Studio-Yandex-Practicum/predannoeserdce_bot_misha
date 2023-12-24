@@ -26,7 +26,7 @@ from message_config import (
     MainMessage,
     SubscribeTextMessage,
 )
-from requests_db import get_faq
+from requests_db import get_faq, check_subscribe, delete_subscribe
 from services import (
     facts_to_str,
     faq_pages_count,
@@ -74,7 +74,7 @@ async def handle_show_main_menu(
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=MainMessage.MENU,
-        reply_markup=await kb.get_main_menu(),
+        reply_markup=await kb.get_main_menu(update.message.from_user.id),
     )
     bot_logger.info(msg=BotLogMessage.SHOW_MAIN_MENU)
 
@@ -344,7 +344,7 @@ async def conv_cancel(
     await update.message.reply_text(
         text=ConversationTextMessage.CANCEL
         % context.user_data.get("entry_text", "продолжить"),
-        reply_markup=await kb.get_main_menu(),
+        reply_markup=await kb.get_main_menu(update.message.from_user.id),
     )
     return ConversationHandler.END
 
@@ -365,7 +365,7 @@ async def handle_admin_answer(
         chat_id=to_chat_id,
         text=ConversationTextMessage.ANSWER_FROM_ADMIN % update.message.text,
         parse_mode=ParseMode.HTML,
-        reply_markup=await kb.get_main_menu(),
+        reply_markup=await kb.get_main_menu(update.message.from_user.id),
     )
     bot_logger.info(msg=ConversationLogMessage.ANSWER_FROM_ADMIN % to_chat_id)
 
@@ -408,3 +408,17 @@ async def subscribe(user_data) -> tuple[str, ReplyKeyboardMarkup]:
         keyboard = await kb.get_subscribe_buttons()
 
     return text, keyboard
+
+
+async def unsubscribe(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    id = update.message.from_user.id
+    if delete_subscribe(user_id=id).status_code == HTTPStatus.NO_CONTENT:
+        text = SubscribeTextMessage.UNSUBS
+    else:
+        text = SubscribeTextMessage.ERROR
+    await update.message.reply_text(
+        text=text,
+        reply_markup=await kb.get_main_menu(id),
+    )

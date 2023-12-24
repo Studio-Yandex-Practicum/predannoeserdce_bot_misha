@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -20,6 +22,7 @@ from message_config import (
     InlineButtonText,
     PlaceholderMessage,
 )
+from requests_db import check_subscribe
 from services import faq_buttons, faq_pages_count
 from settings import bot_logger
 from utils import LinkButtonAttributes
@@ -43,10 +46,14 @@ async def get_cancel_button() -> ReplyKeyboardMarkup:
     )
 
 
-async def get_main_menu() -> ReplyKeyboardMarkup:
+async def get_main_menu(user_id) -> ReplyKeyboardMarkup:
     """Создает клавиатуру основного меню."""
     keyboard = []
-    btn_list = list(item.value for item in MenuFuncButton) + list(
+    if check_subscribe(user_id=user_id).status_code != HTTPStatus.OK:
+        main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.SUBSCRIBE])
+    else:
+        main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.UNSUBSCRIBE])
+    btn_list = main_btn_list + list(
         LINK_BUTTONS.keys()
     )
     btn_idx = 0
