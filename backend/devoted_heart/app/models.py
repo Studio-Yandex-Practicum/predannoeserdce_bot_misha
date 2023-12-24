@@ -100,7 +100,8 @@ class Messages(models.Model):
     )
 
     class Meta:
-        verbose_name_plural = "Сообщения"
+        verbose_name = 'Сообщение'
+        verbose_name_plural = 'Сообщения'
 
     def __str__(self):
-        return f"{self.user} - {self.timestamp}"
+        return f"{self.customer} - {self.timestamp}"
