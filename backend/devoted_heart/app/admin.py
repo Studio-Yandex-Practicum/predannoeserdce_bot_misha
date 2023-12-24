@@ -23,6 +23,7 @@ class FAQAdmin(ImportExportActionModelAdmin):
     list_display_links = ('question',)
     search_fields = ('question', 'order', 'category')
     list_editable = ('order', )
+    list_filter = ('category', )
 
 
 class CustomerResource(resources.ModelResource):
