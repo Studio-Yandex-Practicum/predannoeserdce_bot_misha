@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'djoser',
+    'import_export',
+    'rangefilter',
     'users',
     'app',
     'api',
