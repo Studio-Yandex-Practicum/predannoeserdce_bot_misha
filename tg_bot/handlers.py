@@ -3,7 +3,7 @@ import os
 from http import HTTPStatus
 
 import requests
-from telegram import Message, Update
+from telegram import Message, ReplyKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
@@ -16,15 +16,15 @@ from constants import (
     START_SLEEP,
     ConvState,
     MainCallbacks,
-    OneButtonItems,
     PaginationCallback,
 )
 from message_config import (
-    MESSAGES,
+    BotLogMessage,
     ConversationLogMessage,
     ConversationTextMessage,
-    MenuLogMessage,
-    SubMessageText,
+    InlineButtonText,
+    MainMessage,
+    SubscribeTextMessage,
 )
 from requests_db import get_faq
 from services import (
@@ -57,10 +57,10 @@ async def handle_show_menu_btn(
         await asyncio.sleep(delay=delay)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=MESSAGES["menu_btn"],
+        text=MainMessage.MENU_BTN,
         reply_markup=await kb.get_menu_button(),
     )
-    bot_logger.info(msg=MenuLogMessage.SHOW_MENU_BTN)
+    bot_logger.info(msg=BotLogMessage.SHOW_MENU_BTN)
 
 
 async def handle_show_main_menu(
@@ -73,10 +73,10 @@ async def handle_show_main_menu(
         await asyncio.sleep(delay=delay)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=MESSAGES["menu"],
+        text=MainMessage.MENU,
         reply_markup=await kb.get_main_menu(),
     )
-    bot_logger.info(msg=MenuLogMessage.SHOW_MAIN_MENU)
+    bot_logger.info(msg=BotLogMessage.SHOW_MAIN_MENU)
 
 
 async def handle_alert_message(
@@ -84,7 +84,7 @@ async def handle_alert_message(
 ) -> None:
     """Отвечает пользователю на попытку отправить неподдерживаемый контент."""
     await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=MESSAGES["alert_message"]
+        chat_id=update.effective_chat.id, text=MainMessage.ALERT_MSG
     )
 
 
@@ -97,7 +97,7 @@ async def handle_text_message(
     else:
         await handle_alert_message(update=update, context=context)
         bot_logger.info(
-            msg=MenuLogMessage.UNKNOWN_MESSAGE % (update.message.text,)
+            msg=BotLogMessage.UNKNOWN_MESSAGE % (update.message.text,)
         )
 
 
@@ -107,26 +107,15 @@ async def handle_url_button(
     """Обрабатывает нажатие кнопки с переходом на сайт."""
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=MESSAGES["url"],
+        text=MainMessage.URL,
         reply_markup=await kb.get_url_button(
             btn_attrs=LINK_BUTTONS[update.message.text.lower()],
         ),
     )
-    bot_logger.info(msg=MenuLogMessage.PROCESSING_BTN % update.message.text)
+    bot_logger.info(msg=BotLogMessage.PROCESSING_BTN % update.message.text)
     await handle_show_main_menu(
         update=update, context=context, delay=MENU_SLEEP
     )
-
-
-# async def subscribe(
-#     update: Update, context: ContextTypes.DEFAULT_TYPE
-# ) -> None:
-#     """Обрабатывает нажатие кнопки `Подписаться на рассылку`."""
-#     await context.bot.send_message(
-#         chat_id=update.effective_chat.id,
-#         text=MenuLogMessage.STUB_BTN % update.message.text,
-#     )
-#     await handle_show_main_menu(update=update, context=context, delay=1),
 
 
 async def handle_faq_button(
@@ -142,7 +131,7 @@ async def handle_faq_button(
         context.user_data["page"] = page
         return await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=MESSAGES["faq"],
+            text=MainMessage.FAQ,
             reply_markup=await kb.get_faq_menu(
                 faq_questions=faq_dict, page=page
             ),
@@ -156,7 +145,7 @@ async def handle_faq_button(
     elif order == PaginationCallback.PREV_PAGE:
         page -= 1
     await update.effective_message.edit_text(
-        text=MESSAGES["faq"],
+        text=MainMessage.FAQ,
         reply_markup=await kb.get_faq_menu(faq_questions=faq_dict, page=page),
     )
     context.user_data["page"] = page
@@ -171,16 +160,9 @@ async def handle_faq_callback(
     order = query.data
     if order.isdigit():
         data = faq_dict[order]
-        # data = tuple(
-        #     value
-        #     for item in faq_dict
-        #     for _, value in item.items()
-        #     if item["order"] == int(order)
-        # )
         text = ConversationTextMessage.ANSWER_BY_FAQ % (
             tuple(data.values())[:2]
         )
-        # text = ConversationTextMessage.ANSWER_BY_FAQ % (data[0], data[1])
         await query.edit_message_text(
             text=text,
             reply_markup=await kb.get_back_to_faq(),
@@ -197,36 +179,25 @@ async def handle_faq_callback(
 
 
 # ----- НАЧАЛО ОБЩЕНИЯ ----- #
-async def handle_conv_callback(
+async def conv_start(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """
-    Начало общения, в котором пользователь задаёт свой вопрос.
+    Начало общения, в котором пользователь подписывается на рассылку или
+    задаёт свой вопрос по email.
     Запрос на получение полного имени пользователя.
     """
-    query = update.callback_query
-    context.user_data["callback"] = query.data
-    context.user_data["user_id"] = query.from_user.id
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=ConversationTextMessage.WRITE_FULLNAME,
-        reply_markup=await kb.get_cancel_button(),
-    )
-    bot_logger.info(msg=ConversationLogMessage.START % query.from_user.id)
-    await query.answer()
-    return ConvState.EMAIL
-
-
-async def handle_conv_message(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> int:
-    """
-    Начало общения, в котором пользователь подписывается
-    на рассылку сообщений.
-    Запрос на получение полного имени пользователя.
-    """
-    query = update.message
-    context.user_data["callback"] = query.text
+    if update.callback_query is not None:
+        query = update.callback_query
+        context.user_data["callback"] = query.data
+        context.user_data[
+            "entry_text"
+        ] = InlineButtonText.CUSTOM_QUESTION.lower()
+        await query.answer()
+    else:
+        query = update.message
+        context.user_data["callback"] = query.text
+        context.user_data["entry_text"] = query.text.lower()
     context.user_data["user_id"] = query.from_user.id
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -241,12 +212,15 @@ async def conv_get_email(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Запрос на получение email."""
-
     while not await fullname_validate(update=update, context=context):
-        await update.message.delete()
-        bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
+        await update.message.reply_text(
+            text=ConversationTextMessage.INVALID_FULLNAME
+        )
+        bot_logger.info(
+            msg=ConversationLogMessage.INVALID_DATA % "user_fullname"
+        )
         return ConvState.EMAIL
-    context.user_data["user_fullname"] = update.message.text
+    context.user_data["user_fullname"] = update.message.text.title()
     bot_logger.info(
         msg=ConversationLogMessage.RECEIVED_FULLNAME
         % context.user_data["user_id"]
@@ -263,8 +237,10 @@ async def conv_get_phone(
 ) -> int:
     """Запрос на получение номера телефона."""
     while not await email_validate(update=update, context=context):
-        await update.message.delete()
-        bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
+        await update.message.reply_text(
+            text=ConversationTextMessage.INVALID_EMAIL
+        )
+        bot_logger.info(msg=ConversationLogMessage.INVALID_DATA % "user_email")
         return ConvState.PHONE
     context.user_data["user_email"] = update.message.text
     bot_logger.info(
@@ -278,34 +254,16 @@ async def conv_get_phone(
     return ConvState.SUBJECT
 
 
-async def subscribe(user_data):
-    token = os.getenv("ADMIN_TOKEN")
-    response = requests.post(
-        SERVER_API_CUSTOMER_URL,
-        json=get_data_to_send(user_data),
-        headers=get_headers(token),
-    )
-    print(response)
-    if response.status_code == HTTPStatus.CREATED:
-        facts = get_data_to_user(user_data)
-        text = f"{SubMessageText.DONE}{facts_to_str(facts)}"
-        keyboard = await kb.get_menu_button()
-    else:
-        error = format_error_messages(response.text)
-        text = f"{SubMessageText.ERROR}{error}"
-        keyboard = await kb.get_sub_buttons()
-
-    return text, keyboard
-
-
 async def conv_get_subject(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Запрос на получение темы сообщения."""
-    # while not await phone_validate(update=update, context=context):
-    #     await update.message.delete()
-    #     bot_logger.info(msg=ConversationLogMessage.INVALIDATE)
-    #     return ConvState.SUBJECT
+    while not await phone_validate(update=update, context=context):
+        await update.message.reply_text(
+            text=ConversationTextMessage.INVALID_PHONE
+        )
+        bot_logger.info(msg=ConversationLogMessage.INVALID_DATA % "user_phone")
+        return ConvState.SUBJECT
     context.user_data["user_phone"] = update.message.text
     user_data = context.user_data
     bot_logger.info(
@@ -313,7 +271,7 @@ async def conv_get_subject(
         % context.user_data["user_id"]
     )
     if context.user_data["callback"] == "Подписаться на рассылку":
-        text, keyboard = await subscribe(user_data)
+        text, keyboard = await subscribe(user_data=user_data)
         await update.message.reply_text(text=text, reply_markup=keyboard)
         return ConversationHandler.END
 
@@ -348,7 +306,7 @@ async def conv_end(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         msg=ConversationLogMessage.RECEIVED_QUESTION
         % context.user_data["user_id"]
     )
-    if context.user_data["callback"] == "tg_question":
+    if context.user_data["callback"] == MainCallbacks.TG_QUESTION:
         await send_question_tg(
             update=update, context=context, data=context.user_data
         )
@@ -359,7 +317,7 @@ async def conv_end(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         await handle_show_main_menu(
             update=update, context=context, delay=START_SLEEP
         )
-    if context.user_data["callback"] == "email_question":
+    if context.user_data["callback"] == MainCallbacks.EMAIL_QUESTION:
         await send_question_email(
             update=update, context=context, data=context.user_data
         )
@@ -384,7 +342,8 @@ async def conv_cancel(
         msg=ConversationLogMessage.CANCEL % update.message.from_user.id
     )
     await update.message.reply_text(
-        text=ConversationTextMessage.CANCEL,
+        text=ConversationTextMessage.CANCEL
+        % context.user_data.get("entry_text", "продолжить"),
         reply_markup=await kb.get_main_menu(),
     )
     return ConversationHandler.END
@@ -430,3 +389,22 @@ async def handle_error_callback(
     await handle_show_main_menu(
         update=update, context=context, delay=MENU_SLEEP
     )
+
+
+async def subscribe(user_data) -> tuple[str, ReplyKeyboardMarkup]:
+    token = os.getenv(key="ADMIN_TOKEN")
+    response = requests.post(
+        url=SERVER_API_CUSTOMER_URL,
+        json=get_data_to_send(user_data=user_data),
+        headers=get_headers(token=token),
+    )
+    if response.status_code == HTTPStatus.CREATED:
+        facts = get_data_to_user(user_data=user_data)
+        text = f"{SubscribeTextMessage.DONE}{facts_to_str(user_data=facts)}"
+        keyboard = await kb.get_menu_button()
+    else:
+        error = format_error_messages(text=response.text)
+        text = f"{SubscribeTextMessage.ERROR}{error}"
+        keyboard = await kb.get_subscribe_buttons()
+
+    return text, keyboard

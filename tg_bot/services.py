@@ -7,9 +7,9 @@ from telegram.ext import ContextTypes
 import keyboards as kb
 from constants import ADMIN_CHAT_ID, FAQ_PER_PAGE, MainCallbacks
 from message_config import (
+    BotLogMessage,
     ConversationLogMessage,
     InlineButtonText,
-    MenuLogMessage,
 )
 from settings import bot_logger
 
@@ -45,7 +45,7 @@ async def send_question_email(
 ) -> None:
     """Отправка вопроса администратору на email."""
     await update.message.reply_text(
-        text=MenuLogMessage.STUB_BTN % "`Отправка по email`",
+        text=BotLogMessage.STUB_BTN % "`Отправка по email`",
     )
     bot_logger.info(msg=ConversationLogMessage.SEND_QUESTION % data["user_id"])
 
@@ -82,27 +82,24 @@ def format_error_messages(text) -> str:
 
 
 def get_data_to_send(user_data: dict[str, str]) -> dict[str, str]:
-    data_to_send = {
+    return {
         "email": user_data["user_email"],
         "name": user_data["user_fullname"],
         "phone": user_data["user_phone"],
         "tg_id": user_data["user_id"],
     }
-    return data_to_send
 
 
-def get_data_to_user(user_data: dict[str, str]):
-    data_to_user = {
+def get_data_to_user(user_data: dict[str, str]) -> dict[str, str]:
+    return {
         "Email": user_data["user_email"],
         "Имя": user_data["user_fullname"],
         "Телефон": user_data["user_phone"],
     }
-    return data_to_user
 
 
 def get_headers(token) -> dict[str, str]:
-    headers = {
+    return {
         "Authorization": f"Token {token}",
         "Content-Type": "application/json",
     }
-    return headers

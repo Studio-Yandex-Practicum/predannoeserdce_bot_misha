@@ -16,10 +16,9 @@ from constants import (
     PaginationCallback,
 )
 from message_config import (
+    BotLogMessage,
     InlineButtonText,
-    MenuLogMessage,
     PlaceholderMessage,
-    SubTextButton,
 )
 from services import faq_buttons, faq_pages_count
 from settings import bot_logger
@@ -59,7 +58,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
             row.append(KeyboardButton(text=btn_list[btn_idx].capitalize()))
             btn_idx += 1
         keyboard.append(row)
-    bot_logger.info(msg=MenuLogMessage.CREATE_MAIN_KB)
+    bot_logger.info(msg=BotLogMessage.CREATE_MAIN_KB)
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
         resize_keyboard=True,
@@ -70,7 +69,7 @@ async def get_main_menu() -> ReplyKeyboardMarkup:
 
 async def remove_menu() -> ReplyKeyboardRemove:
     """Удаляет клавиатуру."""
-    bot_logger.info(msg=MenuLogMessage.REMOVE_KB)
+    bot_logger.info(msg=BotLogMessage.REMOVE_KB)
     return ReplyKeyboardRemove()
 
 
@@ -99,21 +98,9 @@ async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
             )
         ]
         for item in page_faq
-        # [
-        #     InlineKeyboardButton(
-        #         text=item[-1]["question"], callback_data=item[-1]["order"]
-        #     )
-        # ]
-        # for item in page_faq
-        # [
-        #     InlineKeyboardButton(
-        #         text=item["question"], callback_data=item["order"]
-        #     )
-        # ]
-        # for item in page_faq
     ]
     if pages_count == 1:
-        bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)
+        bot_logger.info(msg=BotLogMessage.CREATE_FAQ_KB % page)
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
     navigation_buttons = []
@@ -146,7 +133,7 @@ async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
             )
         )
     keyboard.append(navigation_buttons)
-    bot_logger.info(msg=MenuLogMessage.CREATE_FAQ_KB % page)
+    bot_logger.info(msg=BotLogMessage.CREATE_FAQ_KB % page)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
@@ -165,7 +152,7 @@ async def get_communication_way() -> InlineKeyboardMarkup:
             # ),
         ]
     ]
-    bot_logger.info(msg=MenuLogMessage.CREATE_CUSTOM_QUESTION_KB)
+    bot_logger.info(msg=BotLogMessage.CREATE_CUSTOM_QUESTION_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
@@ -179,14 +166,14 @@ async def get_back_to_faq() -> InlineKeyboardMarkup:
             ),
         ]
     ]
-    bot_logger.info(msg=MenuLogMessage.CREATE_BACK_TO_FAQ_KB)
+    bot_logger.info(msg=BotLogMessage.CREATE_BACK_TO_FAQ_KB)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-async def get_sub_buttons():
+async def get_subscribe_buttons() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=SubTextButton.RETURN)],
+            [KeyboardButton(text=OneButtonItems.RETURN.capitalize())],
             [KeyboardButton(text=OneButtonItems.MENU.upper())],
         ],
         resize_keyboard=True,

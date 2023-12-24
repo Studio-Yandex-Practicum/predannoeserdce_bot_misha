@@ -18,12 +18,11 @@ from constants import (
     LINK_BUTTONS,
     START_SLEEP,
     TELEGRAM_TOKEN,
-    TOKEN_UPDATE,
+    TOKEN_UPDATE_HOURS,
     ConvState,
     MainCallbacks,
     MenuFuncButton,
     OneButtonItems,
-    RegexText,
 )
 from handlers import (
     conv_cancel,
@@ -32,9 +31,8 @@ from handlers import (
     conv_get_phone,
     conv_get_question,
     conv_get_subject,
+    conv_start,
     handle_alert_message,
-    handle_conv_callback,
-    handle_conv_message,
     handle_error_callback,
     handle_faq_button,
     handle_faq_callback,
@@ -43,7 +41,7 @@ from handlers import (
     handle_url_button,
     update_faq,
 )
-from message_config import MESSAGES, SubTextButton
+from message_config import MainMessage
 from requests_db import get_token
 
 scheduller = AsyncIOScheduler()
@@ -55,7 +53,7 @@ scheduller.add_job(
 scheduller.add_job(
     func=get_token,
     trigger="interval",
-    hours=TOKEN_UPDATE,
+    hours=TOKEN_UPDATE_HOURS,
 )
 scheduller.start()
 update_faq()
@@ -66,7 +64,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Отвечает пользователю на команду /start."""
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=MESSAGES["start"],
+        text=MainMessage.START,
         reply_markup=await kb.remove_menu(),
     )
     await handle_show_main_menu(
@@ -77,32 +75,40 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Запуск бота."""
     application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
-    cancel_pattern = re.compile(pattern=RegexText.CANCEL, flags=re.IGNORECASE)
+    cancel_pattern = re.compile(
+        pattern=rf"^{OneButtonItems.CANCEL}$", flags=re.IGNORECASE
+    )
     skip_cancel_pattern = re.compile(
-        rf"^(?!.*\b{OneButtonItems.CANCEL.upper()}\b).*$"
+        pattern=rf"^(?!.*\b{OneButtonItems.CANCEL}\b).*$", flags=re.IGNORECASE
+    )
+    subscribe_pattern = re.compile(
+        pattern=rf"^(?:{MenuFuncButton.SUBSCRIBE.value}|"
+        f"{OneButtonItems.RETURN})$",
+        flags=re.IGNORECASE,
     )
     handlers = [
         ConversationHandler(
             entry_points=[
                 CallbackQueryHandler(
-                    callback=handle_conv_callback,
+                    callback=conv_start,
                     pattern=MainCallbacks.TG_QUESTION,
                 ),
                 CallbackQueryHandler(
-                    callback=handle_conv_callback,
+                    callback=conv_start,
                     pattern=MainCallbacks.EMAIL_QUESTION,
                 ),
                 MessageHandler(
-                    filters.Text(
-                        f"{SubTextButton.START} | {SubTextButton.RETURN}"
-                    ),
-                    handle_conv_message,
+                    filters=filters.Regex(pattern=subscribe_pattern),
+                    callback=conv_start,
                 ),
             ],
             states={
                 ConvState.EMAIL: [
                     MessageHandler(
-                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                        filters=(
+                            filters.Regex(pattern=skip_cancel_pattern)
+                            & ~filters.COMMAND
+                        ),
                         callback=conv_get_email,
                     ),
                 ],
@@ -133,14 +139,13 @@ def main() -> None:
             },
             fallbacks=[
                 MessageHandler(
-                    filters=(filters.Regex(pattern=cancel_pattern)),
+                    filters=(
+                        filters.Regex(pattern=cancel_pattern) | filters.COMMAND
+                    ),
                     callback=conv_cancel,
                 ),
-                CommandHandler(command="menu", callback=conv_cancel),
             ],
         ),
-        CommandHandler(command="start", callback=start),
-        CommandHandler(command="menu", callback=handle_show_main_menu),
         MessageHandler(
             filters=(
                 filters.Regex(
@@ -175,6 +180,8 @@ def main() -> None:
             filters=(filters.AUDIO | filters.PHOTO | filters.Sticker.ALL),
             callback=handle_alert_message,
         ),
+        CommandHandler(command="start", callback=start),
+        CommandHandler(command="menu", callback=handle_show_main_menu),
     ]
     for handler in handlers:
         application.add_handler(handler=handler)

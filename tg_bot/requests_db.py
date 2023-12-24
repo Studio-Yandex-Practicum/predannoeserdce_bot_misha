@@ -1,4 +1,3 @@
-import json
 import os
 from http import HTTPStatus
 
@@ -12,11 +11,11 @@ from constants import (
     SERVER_API_TOKEN_URL,
     MainCallbacks,
 )
-from message_config import MESSAGES, MenuLogMessage
+from message_config import MainMessage, BotLogMessage
 from settings import bot_logger
 
 
-def get_faq() -> list[dict[str, str | int]]:
+def get_faq() -> dict[str | int, str]:
     """Получение из БД списка частых вопросов и ответов."""
     url = SERVER_API_FAQ_URL
     results = {}
@@ -24,33 +23,35 @@ def get_faq() -> list[dict[str, str | int]]:
         try:
             response: Response = requests.get(url=url)
         except Exception as error:
-            bot_logger.error(msg=MenuLogMessage.UNKNOWN_ERROR % (error,))
+            bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % (error,))
         if response.status_code != HTTPStatus.OK:
             bot_logger.error(
-                msg=MenuLogMessage.SERVER_ERROR % (response.status_code,)
+                msg=BotLogMessage.SERVER_ERROR % (response.status_code,)
             )
-            return [
+            results.update(
                 {
-                    "question": MESSAGES["server_error"],
-                    "order": MainCallbacks.SERVER_ERROR,
+                    MainCallbacks.SERVER_ERROR: {
+                        "question": MainMessage.SERVER_ERROR,
+                    }
                 }
-            ]
+            )
+            return results
         data = response.json()
         results.update(data["results"])
         if not data["next"]:
             break
         url = data["next"]
-    bot_logger.info(msg=MenuLogMessage.UPDATE_FAQ_DICT)
+    bot_logger.info(msg=BotLogMessage.UPDATE_FAQ_DICT)
     return results
 
 
-def get_token():
+def get_token() -> None:
     token_url = SERVER_API_TOKEN_URL
     credentials = {"email": ADMIN_LOGIN, "password": ADMIN_PASSWORD}
-    response = requests.post(token_url, data=credentials)
-    print(response.text)
-    if response.status_code == 200:
-        token_data = response.json()
-        token = token_data.get("auth_token")
-        os.environ["ADMIN_TOKEN"] = token
-        bot_logger.info(msg="Токен получен")
+    response = requests.post(url=token_url, data=credentials)
+    if response.status_code != 200:
+        return None
+    token_data = response.json()
+    token = token_data.get("auth_token")
+    os.environ["ADMIN_TOKEN"] = token
+    bot_logger.info(msg=BotLogMessage.TOKEN_RECEIVED)

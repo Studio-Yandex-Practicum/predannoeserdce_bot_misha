@@ -23,6 +23,10 @@ class MenuFuncButton(str, Enum):
 
 # Ссылочные кнопки меню
 LINK_BUTTONS: dict[str, LinkButtonAttributes] = {
+    "срочный сбор": LinkButtonAttributes(
+        text="Перейдите по ссылке, чтобы поучаствовать в срочном сборе",
+        url="https://predannoeserdce.ru/catalog-help/srochnyj-sbor-na-arendu/",
+    ),
     "попечительство": LinkButtonAttributes(
         text="Условия попечительства можно посмотреть на сайте",
         url="https://predannoeserdce.ru/programmy-prijuta/popechitelstvo/",
@@ -52,24 +56,32 @@ FAQ_PER_PAGE = 5
 class OneButtonItems:
     MENU = "главное меню"
     CANCEL = "назад в меню"
+    RETURN = "попробовать еще раз"
 
 
 # Задержки
 START_SLEEP = 1
 MENU_SLEEP = 3
 
+# ---- Данные с сервера ---- #
 
 # Получение и обновление списка вопросов
 SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")
 FAQ_UPDATE_INTERVAL_MINUTES = 10
 
+# Токен
+SERVER_API_TOKEN_URL = os.getenv(key="SERVER_API_TOKEN_URL")
+TOKEN_UPDATE_HOURS = 12
+
+# Подписка
+SERVER_API_CUSTOMER_URL = os.getenv(key="SERVER_API_CUSTOMER_URL")
+
 
 # Проверки введенного текста
 class RegexText:
     USER_FULLNAME = r"(\b[А-ЯЁ]{1}[а-яё]+\b)"
-    CANCEL = rf"^{OneButtonItems.CANCEL}$"
     EMAIL = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    PHONE = r"^\+7\d{10}$"
+    PHONE = r"^[7|8]\d{10}$"
 
 
 # Стадии разговора
@@ -106,11 +118,3 @@ class LogSetting:
     ENCODING = "utf8"
     FILESIZE = 1024 * 1024
     FILECOUNT = 3
-
-
-# Токен
-SERVER_API_TOKEN_URL = os.getenv("SERVER_API_TOKEN_URL")
-TOKEN_UPDATE = 12  # в часах
-
-# Подписка
-SERVER_API_CUSTOMER_URL = os.getenv("SERVER_API_CUSTOMER_URL")
