@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_object_actions',
     'djoser',
+    'import_export',
+    'rangefilter',
     'users',
     'app',
     'api',

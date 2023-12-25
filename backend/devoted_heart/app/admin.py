@@ -1,10 +1,13 @@
+from datetime import datetime
 import logging
 from django.contrib import admin
 from django.contrib.admin.actions import delete_selected
 from django_object_actions import DjangoObjectActions
 from django.shortcuts import render
 from django.urls import path
-
+from import_export import resources
+from import_export.admin import ImportExportActionModelAdmin
+from rangefilter.filters import DateRangeFilterBuilder
 from app.forms import MessagesForm
 from app.models import Customer, FAQ, Messages
 from core.constants import EMPTY_FIELD_VALUE
@@ -13,18 +16,38 @@ from app.regular_messages import send_messages, start_scheduler, stop_scheduler
 logger = logging.getLogger(__name__)
 
 
-class FAQAdmin(admin.ModelAdmin):
-    """Админка для часто задаваемых вопросов."""
-    empty_value_display = EMPTY_FIELD_VALUE
-    list_display = ('pk', 'question', 'order',)
-    search_fields = ('question', 'answer',)
+class FAQResource(resources.ModelResource):
+    class Meta:
+        model = FAQ
 
 
-class CustomerAdmin(admin.ModelAdmin):
-    """Админка для клиентов."""
+class FAQAdmin(ImportExportActionModelAdmin):
+    """Админка модели Часто задаваемые вопросы"""
+    resource_class = FAQResource
     empty_value_display = EMPTY_FIELD_VALUE
-    list_display = ('pk', 'name', 'email', 'tg_id', 'phone')
-    search_fields = ('name', 'tg_id')
+    list_display = ('pk', 'question', 'answer', 'category', 'order',)
+    list_display_links = ('question',)
+    search_fields = ('question', 'order', 'category')
+    list_editable = ('order', )
+    list_filter = ('category', )
+
+
+class CustomerResource(resources.ModelResource):
+    class Meta:
+        model = Customer
+
+
+class CustomerAdmin(ImportExportActionModelAdmin):
+    """Админка модели Клиент"""
+    resource_class = CustomerResource
+    list_display = (
+        'pk', 'name', 'email', 'tg_id', 'phone', 'registration_date'
+    )
+    list_display_links = ('name',)
+    search_fields = ('name__startswith', 'email__startswith', 'phone')
+    list_filter = (
+        ('registration_date', DateRangeFilterBuilder()),
+    )
 
 
 class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
