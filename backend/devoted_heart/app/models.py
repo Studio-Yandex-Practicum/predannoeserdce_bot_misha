@@ -37,9 +37,10 @@ class FAQ(models.Model):
     )
 
     class Meta:
-        ordering = ('order', )
+        ordering = ('order',)
         verbose_name = 'Часто задаваемые вопросы'
         verbose_name_plural = 'Часто задаваемые вопросы'        
+
 
     def __str__(self) -> str:
         return f'{self.question}'
@@ -85,8 +86,40 @@ class Customer(models.Model):
 
     class Meta:
         ordering = ('id', )
-        verbose_name = 'Клиент'
         verbose_name_plural = 'Клиенты'
+        verbose_name = 'Клиент'
 
     def __str__(self) -> str:
         return f'Имя: {self.name}'
+
+
+class Messages(models.Model):
+    """Сообщения"""
+    customer = models.ForeignKey(
+        'Customer', on_delete=models.CASCADE,
+        null=True, blank=True
+    )
+    text = models.TextField(
+        max_length=4096,
+        null=True,
+        blank=True,
+        verbose_name='Текст сообщения от администратора',
+    )
+    image = models.ImageField(
+        upload_to='message_images/',
+        null=True,
+        blank=True,
+        verbose_name='Фотография',
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    selected = models.BooleanField(
+        default=False,
+        verbose_name='Дополнить планировщик сообщением от администратора',
+    )
+
+    class Meta:
+        verbose_name = 'Сообщение'
+        verbose_name_plural = 'Сообщения'
+
+    def __str__(self):
+        return f"{self.customer} - {self.timestamp}"

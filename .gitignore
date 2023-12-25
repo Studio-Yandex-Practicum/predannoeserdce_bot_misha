@@ -120,6 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.vscode
 .env
 .venv
 env/
@@ -128,6 +129,8 @@ ENV/
 env.bak/
 venv.bak/
 
+# Django ignore
+collected_static/
 # Spyder project settings
 .spyderproject
 .spyproject

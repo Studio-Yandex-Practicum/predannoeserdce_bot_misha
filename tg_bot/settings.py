@@ -1,9 +1,20 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
-from constants import LOGGING_LEVEL
+from constants import LogSetting
 
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=LOGGING_LEVEL,
+    format=LogSetting.FORMAT,
+    level=LogSetting.LEVEL,
 )
-bot_logger = logging.getLogger(name="tg_bot")
+bot_logger = logging.getLogger(name=LogSetting.NAME)
+bot_handler = RotatingFileHandler(
+    filename=LogSetting.FILENAME,
+    encoding=LogSetting.ENCODING,
+    maxBytes=LogSetting.FILESIZE,
+    backupCount=LogSetting.FILECOUNT,
+)
+bot_handler.setLevel(level=LogSetting.LEVEL)
+formatter = logging.Formatter(fmt=LogSetting.FORMAT)
+bot_handler.setFormatter(fmt=formatter)
+bot_logger.addHandler(hdlr=bot_handler)

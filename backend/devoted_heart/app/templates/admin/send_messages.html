@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+{% extends 'admin/base_site.html' %}
+
+{% block title %}Send Messages{% endblock %}
+
+{% block content %}
+  <div class="module">
+    <form method="post" action="{% url 'admin:send_messages' %}">
+      {% csrf_token %}
+      <input type="submit" value="Send Messages">
+    </form>
+  </div>
+{% endblock %}

@@ -21,6 +21,7 @@ from core.constants import (
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATABASE_DIR = 'database'
 
 
 # Quick-start development settings - unsuitable for production
@@ -33,7 +34,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'no_secrets_from_us')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv('DEBUG', '').lower() == 'true' else False
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+MAIN_HOST = os.getenv('MAIN_HOST', None)
+if MAIN_HOST is not None:
+    ALLOWED_HOSTS.append(MAIN_HOST)
 
 
 # Application definition
@@ -46,12 +50,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_object_actions',
     'djoser',
     'import_export',
     'rangefilter',
     'users',
     'app',
     'api',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +71,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'devoted_heart.urls'
+
+STATIC_ROOT = BASE_DIR / 'collected_static'
 
 TEMPLATES = [
     {
@@ -91,7 +99,7 @@ WSGI_APPLICATION = 'devoted_heart.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / DATABASE_DIR / 'db.sqlite3',
     }
 }
 
