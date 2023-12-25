@@ -130,7 +130,7 @@ class BanList:
 
 # Рабочее время администратора
 class AdminWorkTime:
-    START_H = 8
+    START_H = 10
     START_MIN = 0
     END_H = 20
     END_MIN = 0

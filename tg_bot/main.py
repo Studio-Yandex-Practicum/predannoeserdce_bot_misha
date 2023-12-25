@@ -1,53 +1,40 @@
 ﻿import re
 
-import pytz
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
-    ConversationHandler,
     MessageHandler,
     filters,
 )
 
 import keyboards as kb
+from apscher import scheduller_initial
 from constants import (
-    FAQ_UPDATE_INTERVAL_MINUTES,
     LINK_BUTTONS,
     START_SLEEP,
     TELEGRAM_TOKEN,
-    TOKEN_UPDATE_HOURS,
-    AdminWorkTime,
-    ConvState,
     MainCallbacks,
     MenuFuncButton,
-    OneButtonItems,
 )
-from handlers import (
-    conv_cancel,
-    conv_end,
-    conv_get_email,
-    conv_get_phone,
-    conv_get_question,
-    conv_get_subject,
-    conv_start,
+from handlers.ban import handle_to_ban
+from handlers.basic import (
     handle_alert_message,
     handle_error_callback,
-    handle_faq_button,
-    handle_faq_callback,
     handle_show_main_menu,
     handle_text_message,
-    handle_to_ban,
     handle_url_button,
-    unsubscribe,
-    update_faq,
 )
+from handlers.conv_data_collection import (
+    data_collect_handler,
+    tg_question_handler,
+)
+from handlers.faq import handle_faq_button, handle_faq_callback, update_faq
+from handlers.subscribe import unsubscribe
 from message_config import MainMessage
 from requests_db import get_token
-from services import send_delayed_questions
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -67,121 +54,14 @@ def main() -> None:
     application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
     bot = application.bot
 
-    timezone = pytz.timezone(AdminWorkTime.TIMEZONE)
-    scheduller = AsyncIOScheduler(timezone=timezone)
-    scheduller.add_job(
-        func=update_faq,
-        trigger="interval",
-        minutes=FAQ_UPDATE_INTERVAL_MINUTES,
-    )
-    scheduller.add_job(
-        func=get_token,
-        trigger="interval",
-        hours=TOKEN_UPDATE_HOURS,
-    )
-    scheduller.add_job(
-        func=send_delayed_questions,
-        trigger="cron",
-        hour=AdminWorkTime.START_H,
-        minute=AdminWorkTime.START_MIN,
-        kwargs={"bot": bot},
-    )
+    scheduller = scheduller_initial(bot=bot)
     scheduller.start()
     update_faq()
     get_token()
-    cancel_pattern = re.compile(
-        pattern=rf"^{OneButtonItems.CANCEL}$", flags=re.IGNORECASE
-    )
-    skip_cancel_pattern = re.compile(
-        pattern=rf"^(?!.*\b{OneButtonItems.CANCEL}\b).*$", flags=re.IGNORECASE
-    )
-    subscribe_pattern = re.compile(
-        pattern=rf"^(?:{MenuFuncButton.SUBSCRIBE.value}|"
-        f"{OneButtonItems.RETURN})$",
-        flags=re.IGNORECASE,
-    )
+
     handlers = [
-        ConversationHandler(
-            entry_points=[
-                CallbackQueryHandler(
-                    callback=conv_start,
-                    pattern=MainCallbacks.EMAIL_QUESTION,
-                ),
-                MessageHandler(
-                    filters=filters.Regex(pattern=subscribe_pattern),
-                    callback=conv_start,
-                ),
-            ],
-            states={
-                ConvState.EMAIL: [
-                    MessageHandler(
-                        filters=(
-                            filters.Regex(pattern=skip_cancel_pattern)
-                            & ~filters.COMMAND
-                        ),
-                        callback=conv_get_email,
-                    ),
-                ],
-                ConvState.PHONE: [
-                    MessageHandler(
-                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
-                        callback=conv_get_phone,
-                    ),
-                ],
-                ConvState.SUBJECT: [
-                    MessageHandler(
-                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
-                        callback=conv_get_subject,
-                    )
-                ],
-                ConvState.QUESTION: [
-                    MessageHandler(
-                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
-                        callback=conv_get_question,
-                    )
-                ],
-                ConvState.SEND: [
-                    MessageHandler(
-                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
-                        callback=conv_end,
-                    )
-                ],
-            },
-            fallbacks=[
-                MessageHandler(
-                    filters=(
-                        filters.Regex(pattern=cancel_pattern) | filters.COMMAND
-                    ),
-                    callback=conv_cancel,
-                ),
-            ],
-        ),
-        # --- TG_CONV --- #
-        ConversationHandler(
-            entry_points=[
-                CallbackQueryHandler(
-                    callback=conv_get_question,
-                    pattern=MainCallbacks.TG_QUESTION,
-                ),
-            ],
-            states={
-                ConvState.SEND: [
-                    MessageHandler(
-                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
-                        callback=conv_end,
-                    )
-                ],
-            },
-            fallbacks=[
-                MessageHandler(
-                    filters=(
-                        filters.Regex(pattern=cancel_pattern) | filters.COMMAND
-                    ),
-                    callback=conv_cancel,
-                ),
-            ],
-        ),
-        # --- TG_CONV_END --- #
+        data_collect_handler,
+        tg_question_handler,
         MessageHandler(
             filters=(
                 filters.Regex(

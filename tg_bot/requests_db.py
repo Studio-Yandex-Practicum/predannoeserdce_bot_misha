@@ -13,7 +13,6 @@ from constants import (
     MainCallbacks,
 )
 from message_config import BotLogMessage, MainMessage
-from services import get_headers
 from settings import bot_logger
 
 
@@ -45,6 +44,14 @@ def get_faq() -> dict[str | int, str]:
         url = data["next"]
     bot_logger.info(msg=BotLogMessage.UPDATE_FAQ_DICT)
     return results
+
+
+def get_headers(token) -> dict[str, str]:
+    """Подготавливает заголовок."""
+    return {
+        "Authorization": f"Token {token}",
+        "Content-Type": "application/json",
+    }
 
 
 def get_token() -> None:

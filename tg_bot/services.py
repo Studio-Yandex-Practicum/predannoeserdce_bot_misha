@@ -130,14 +130,6 @@ def get_data_to_send(user_data: dict[str, str]) -> dict[str, str]:
     }
 
 
-def get_headers(token) -> dict[str, str]:
-    """Подготавливает заголовок."""
-    return {
-        "Authorization": f"Token {token}",
-        "Content-Type": "application/json",
-    }
-
-
 def check_user_at_ban(user_id: int) -> bool:
     """Проверяет пользователя на нахождение в чёрном списке."""
     with open(
