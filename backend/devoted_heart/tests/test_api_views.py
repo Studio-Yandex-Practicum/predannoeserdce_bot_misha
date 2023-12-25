@@ -24,9 +24,3 @@ class ViewsTestCase(TestCase):
     def test_customer_faq_list(self):
         response = self.client.get('/api/faq/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_custom_login_view(self):
-        pass
-
-    def test_custom_logout_view(self):
-        pass
