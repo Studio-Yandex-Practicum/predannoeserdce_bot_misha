@@ -20,7 +20,7 @@ class FAQSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FAQ
-        fields = ('question', 'answer', 'order')
+        fields = ('id', 'question', 'answer', 'order')
 
 
 class CustomerSerializer(serializers.ModelSerializer):

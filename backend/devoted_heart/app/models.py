@@ -3,6 +3,13 @@ from django.db import models
 
 class FAQ(models.Model):
     """Часто задаваемый вопрос."""
+    class Category(models.TextChoices):
+        DONATION = 'DONATION', 'Пожертвование'
+        GUARDIANS = 'GUARDIANS', 'Опекунство'
+        ABOUT_US = 'ABOUT_US', 'О нас'
+        PROGRAMS = 'PROGRAMS', 'Программы'
+        GENERAL = 'GENERAL', 'Общие вопросы'
+
     question = models.TextField(
         verbose_name='Вопрос',
         help_text='Вопрос',
@@ -22,9 +29,18 @@ class FAQ(models.Model):
         blank=False,
         null=False,
     )
+    category = models.CharField(
+        max_length=10,
+        choices=Category.choices,
+        default=Category.GENERAL,
+        verbose_name='Категория'
+    )
 
     class Meta:
-        ordering = ('order', )
+        ordering = ('order',)
+        verbose_name = 'Часто задаваемые вопросы'
+        verbose_name_plural = 'Часто задаваемые вопросы'        
+
 
     def __str__(self) -> str:
         return f'{self.question}'
@@ -63,10 +79,15 @@ class Customer(models.Model):
         blank=False,
         null=False,
     )
+    registration_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата регистрации'
+    )
 
     class Meta:
         ordering = ('id', )
-        verbose_name_plural = "Клиенты"
+        verbose_name_plural = 'Клиенты'
+        verbose_name = 'Клиент'
 
     def __str__(self) -> str:
         return f'Имя: {self.name}'
@@ -78,12 +99,28 @@ class Messages(models.Model):
         'Customer', on_delete=models.CASCADE,
         null=True, blank=True
     )
-    text = models.TextField()
+    text = models.TextField(
+        max_length=4096,
+        null=True,
+        blank=True,
+        verbose_name='Текст сообщения от администратора',
+    )
+    image = models.ImageField(
+        upload_to='message_images/',
+        null=True,
+        blank=True,
+        verbose_name='Фотография',
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
+    selected = models.BooleanField(
+        default=False,
+        verbose_name='Дополнить планировщик сообщением от администратора',
+    )
 
     class Meta:
-        verbose_name_plural = "Сообщения"
-        ordering = ('id', )
+        verbose_name = "Сообщение"
+        verbose_name_plural = 'Сообщения'
+        ordering = ('id',)
 
     def __str__(self):
         return f"{self.customer} - {self.timestamp}"

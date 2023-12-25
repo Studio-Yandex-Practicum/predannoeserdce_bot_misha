@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 from djoser.views import TokenDestroyView, UserViewSet
 from django_filters.rest_framework import DjangoFilterBackend
@@ -37,6 +39,18 @@ class FAQViewset(
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     permission_classes = (permissions.AllowAny,)
+
+    def list(self, request, *args, **kwargs):
+        """Изменена структура ответа для списка вопросов."""
+        res = super().list(request, *args, **kwargs)
+        new_results = OrderedDict()
+        old_results = res.data['results']
+        for old_result in old_results:
+            id = old_result['id']
+            del old_result['id']
+            new_results[id] = OrderedDict(**old_result)
+        res.data['results'] = new_results
+        return res
 
 
 class CustomerVewset(viewsets.ModelViewSet):

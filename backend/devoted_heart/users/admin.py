@@ -9,14 +9,20 @@ class UserAdmin(admin.ModelAdmin):
     empty_value_display = EMPTY_FIELD_VALUE
     """Админка для пользователя."""
     list_display = (
+        'id',
         'username',
         'email',
         'name',
         'surname',
         'tg_id',
     )
-    list_filter = ('username',)
-    search_fields = ('username', 'surname', 'tg_id')
+    list_display_links = ('username', )
+    search_fields = (
+        'username__startswith',
+        'email__startswith',
+        'surname',
+        'tg_id'
+    )
 
 
 admin.site.register(User, UserAdmin)
