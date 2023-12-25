@@ -74,6 +74,10 @@ ROOT_URLCONF = 'devoted_heart.urls'
 
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
+MEDIA_ROOT = '/media/'
+
+MEDIA_URL = '/media/'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
