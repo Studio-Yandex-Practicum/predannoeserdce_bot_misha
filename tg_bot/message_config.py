@@ -49,7 +49,7 @@ class ConversationTextMessage:
     ERROR_THANKS = "Спасибо! Благодаря вам скоро мы всё исправим!"
     INVALID_FULLNAME = (
         "Неверный ввод. \n"
-        "Убедитесь, что вы вписываете имя и фамилию кириллицей"
+        "Убедитесь, что вы вписываете Имя и Фамилию кириллицей"
     )
     INVALID_EMAIL = (
         "Неверный ввод. \n"
@@ -60,6 +60,11 @@ class ConversationTextMessage:
         "Неверный ввод. \n"
         "Убедитесь, что вы вписываете номер телефона\n"
         "состоящий из 11 цифр\nв формате 7XXXXXXXXXX или 8XXXXXXXXXX"
+    )
+    USER_ADD_TO_BAN = "Пользователь id:%s добавлен в чёрный список"
+    USER_EXIST_AT_BAN = (
+        "К сожалению, вы не можете задать вопрос.\n"
+        "Зато можете посмотреть котиков"
     )
 
 
@@ -77,7 +82,13 @@ class BotLogMessage:
     UPDATE_FAQ_DICT = "Список частых вопросов обновлён"
     CREATE_CUSTOM_QUESTION_KB = "Создана клавиатура нового вопроса"
     CREATE_BACK_TO_FAQ_KB = "Создана кнопка возврата к частым вопросам"
+    CREATE_SUBSCRIBE_KB = "Создана клавиатура подписки на рассылку"
+    CREATE_TO_BAN_KB = "Создана клавиатура добавления в черный список"
     TOKEN_RECEIVED = "Токен успешно получен"
+    USER_ADD_TO_BAN = "Пользователь id:%s добавлен в чёрный список"
+    USER_EXIST_AT_BAN = (
+        "Неудачная попытка общения. Пользователь id:%s в чёрном списке"
+    )
 
 
 class ConversationLogMessage:
@@ -93,6 +104,10 @@ class ConversationLogMessage:
     CANCEL = "Общение прервано пользователем id:%s"
     ANSWER_FROM_ADMIN = "Пользователю %s отправлен ответ администратора"
     ERROR_TO_ADMIN = "Сообщение об ошибке отправлено администратору"
+    SUBSCRIBE_SUCCESS = "Пользователь id:%s успешно подписался на рассылку"
+    SUBSCRIBE_ERROR = "Ошибка (%s) при попытке пользователя id:%s подписаться"
+    UNSUSCRIBE_SUCCESS = "Пользователь id:%s успешно отписался от рассылки"
+    UNSUBSCRIBE_ERROR = "Ошибка (%s) при попытке пользователя id:%s отписаться"
 
 
 class PlaceholderMessage:
@@ -109,10 +124,25 @@ class InlineButtonText:
     TELEGRAM_QUESTION = "Telegram"
     EMAIL_QUESTION = "Email"
     BACK_TO_FAQ = "Назад к вопросам"
+    USER_TO_BAN = "Заблокировать пользователя"
 
 
 class SubscribeTextMessage:
     USER_DATE = "Ваши данные:"
-    DONE = "Мяу, вы успешно подписаны на рассылку сообщений. Вот ваши данные:"
+    DONE = (
+        "<b>Мяу, вы успешно подписаны на рассылку сообщений.</b>\n"
+        "Вот ваши данные:"
+    )
     ERROR = "Мррр, что-то пошло не так:\n"
-    UNSUBS = "Вы успешно отписались от рассылки"
+    UNSUBSCRIBE = "Вы успешно отписались от рассылки"
+
+
+class DelayedQstnsTextMessage:
+    SEND_START = "У вас есть непрочитанные сообщения."
+    SEND_END = "На сегодня это все сообщения!"
+
+
+class DelayedQstnsLogMessage:
+    QUESTION_DELAYED = "Вопрос пользователя id:%s сохранён в отложенные"
+    SEND_START = "Начата отправка отложенных сообщений."
+    SEND_END = "Отправка сообщений окончена. Отложенные сообщения удалены."

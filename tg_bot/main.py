@@ -1,5 +1,6 @@
 ﻿import re
 
+import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update
 from telegram.ext import (
@@ -19,6 +20,7 @@ from constants import (
     START_SLEEP,
     TELEGRAM_TOKEN,
     TOKEN_UPDATE_HOURS,
+    AdminWorkTime,
     ConvState,
     MainCallbacks,
     MenuFuncButton,
@@ -38,27 +40,14 @@ from handlers import (
     handle_faq_callback,
     handle_show_main_menu,
     handle_text_message,
+    handle_to_ban,
     handle_url_button,
-    update_faq,
     unsubscribe,
+    update_faq,
 )
 from message_config import MainMessage
 from requests_db import get_token
-
-scheduller = AsyncIOScheduler()
-scheduller.add_job(
-    func=update_faq,
-    trigger="interval",
-    minutes=FAQ_UPDATE_INTERVAL_MINUTES,
-)
-scheduller.add_job(
-    func=get_token,
-    trigger="interval",
-    hours=TOKEN_UPDATE_HOURS,
-)
-scheduller.start()
-update_faq()
-get_token()
+from services import send_delayed_questions
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -76,6 +65,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Запуск бота."""
     application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
+    bot = application.bot
+
+    timezone = pytz.timezone(AdminWorkTime.TIMEZONE)
+    scheduller = AsyncIOScheduler(timezone=timezone)
+    scheduller.add_job(
+        func=update_faq,
+        trigger="interval",
+        minutes=FAQ_UPDATE_INTERVAL_MINUTES,
+    )
+    scheduller.add_job(
+        func=get_token,
+        trigger="interval",
+        hours=TOKEN_UPDATE_HOURS,
+    )
+    scheduller.add_job(
+        func=send_delayed_questions,
+        trigger="cron",
+        hour=AdminWorkTime.START_H,
+        minute=AdminWorkTime.START_MIN,
+        kwargs={"bot": bot},
+    )
+    scheduller.start()
+    update_faq()
+    get_token()
     cancel_pattern = re.compile(
         pattern=rf"^{OneButtonItems.CANCEL}$", flags=re.IGNORECASE
     )
@@ -90,10 +103,6 @@ def main() -> None:
     handlers = [
         ConversationHandler(
             entry_points=[
-                CallbackQueryHandler(
-                    callback=conv_start,
-                    pattern=MainCallbacks.TG_QUESTION,
-                ),
                 CallbackQueryHandler(
                     callback=conv_start,
                     pattern=MainCallbacks.EMAIL_QUESTION,
@@ -147,6 +156,32 @@ def main() -> None:
                 ),
             ],
         ),
+        # --- TG_CONV --- #
+        ConversationHandler(
+            entry_points=[
+                CallbackQueryHandler(
+                    callback=conv_get_question,
+                    pattern=MainCallbacks.TG_QUESTION,
+                ),
+            ],
+            states={
+                ConvState.SEND: [
+                    MessageHandler(
+                        filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                        callback=conv_end,
+                    )
+                ],
+            },
+            fallbacks=[
+                MessageHandler(
+                    filters=(
+                        filters.Regex(pattern=cancel_pattern) | filters.COMMAND
+                    ),
+                    callback=conv_cancel,
+                ),
+            ],
+        ),
+        # --- TG_CONV_END --- #
         MessageHandler(
             filters=(
                 filters.Regex(
@@ -186,6 +221,9 @@ def main() -> None:
         ),
         CallbackQueryHandler(
             callback=handle_error_callback, pattern=MainCallbacks.SERVER_ERROR
+        ),
+        CallbackQueryHandler(
+            callback=handle_to_ban, pattern=MainCallbacks.USER_TO_BAN
         ),
         CallbackQueryHandler(callback=handle_faq_callback),
         MessageHandler(

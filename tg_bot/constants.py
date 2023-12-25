@@ -19,7 +19,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 class MenuFuncButton(str, Enum):
     FAQ = "частые вопросы"
     SUBSCRIBE = "подписаться на рассылку"
-    UNSUBSCRIBE = "отписаться"
+    UNSUBSCRIBE = "отписаться от рассылки"
 
 
 # Ссылочные кнопки меню
@@ -76,7 +76,6 @@ TOKEN_UPDATE_HOURS = 12
 
 # Подписка
 SERVER_API_CUSTOMER_URL = os.getenv(key="SERVER_API_CUSTOMER_URL")
-SERVER_API_SUBS_URL = os.getenv(key='SERVER_API_SUBS_URL')
 
 
 # Проверки введенного текста
@@ -109,6 +108,7 @@ class MainCallbacks:
     EMAIL_QUESTION = "email_question"
     BACK_TO_FAQ = "back_to_faq"
     SERVER_ERROR = "server_error"
+    USER_TO_BAN = "user_to_ban"
 
 
 # Настройки логгера:
@@ -120,3 +120,29 @@ class LogSetting:
     ENCODING = "utf8"
     FILESIZE = 1024 * 1024
     FILECOUNT = 3
+
+
+# Черный список
+class BanList:
+    FILENAME = "bot_ban/blacklist.txt"
+    ENCODING = "utf8"
+
+
+# Рабочее время администратора
+class AdminWorkTime:
+    START_H = 8
+    START_MIN = 0
+    END_H = 20
+    END_MIN = 0
+    TIMEZONE = "Europe/Moscow"
+
+
+class DelayedQuestionsAttr:
+    FILENAME = "delayed_qstns.txt"
+    ENCODING = "utf8"
+    MSG_SEPARATOR = "\n__!РАЗДЕЛИТЕЛЬ!__\n"
+
+
+class DelayedQuestionsSendDelay:
+    MINIMUM = 2
+    MAXIMUM = 7

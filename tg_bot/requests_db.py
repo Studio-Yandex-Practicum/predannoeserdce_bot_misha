@@ -7,13 +7,12 @@ from requests import Response
 from constants import (
     ADMIN_LOGIN,
     ADMIN_PASSWORD,
+    SERVER_API_CUSTOMER_URL,
     SERVER_API_FAQ_URL,
     SERVER_API_TOKEN_URL,
-    SERVER_API_SUBS_URL,
-    SERVER_API_CUSTOMER_URL,
     MainCallbacks,
 )
-from message_config import MainMessage, BotLogMessage
+from message_config import BotLogMessage, MainMessage
 from services import get_headers
 from settings import bot_logger
 
@@ -26,7 +25,7 @@ def get_faq() -> dict[str | int, str]:
         try:
             response: Response = requests.get(url=url)
         except Exception as error:
-            bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % (error,))
+            bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % error)
         if response.status_code != HTTPStatus.OK:
             bot_logger.error(
                 msg=BotLogMessage.SERVER_ERROR % (response.status_code,)
@@ -49,10 +48,17 @@ def get_faq() -> dict[str | int, str]:
 
 
 def get_token() -> None:
+    """Получение токена для бота."""
     token_url = SERVER_API_TOKEN_URL
     credentials = {"email": ADMIN_LOGIN, "password": ADMIN_PASSWORD}
-    response = requests.post(url=token_url, data=credentials)
-    if response.status_code != 200:
+    try:
+        response = requests.post(url=token_url, data=credentials)
+    except Exception as error:
+        bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % error)
+    if response.status_code != HTTPStatus.OK:
+        bot_logger.error(
+            msg=BotLogMessage.SERVER_ERROR % (response.status_code,)
+        )
         return None
     token_data = response.json()
     token = token_data.get("auth_token")
@@ -60,21 +66,31 @@ def get_token() -> None:
     bot_logger.info(msg=BotLogMessage.TOKEN_RECEIVED)
 
 
-def check_subscribe(user_id):
-    subscribe_url = f'{SERVER_API_SUBS_URL}{user_id}'
+def check_subscribe(user_id) -> Response:
+    """Проверка подписки пользователем на рассылку."""
+    subscribe_url = f"{SERVER_API_CUSTOMER_URL}{user_id}"
     token = os.getenv(key="ADMIN_TOKEN")
-    response = requests.get(
-        url=subscribe_url,
-        headers=get_headers(token=token),
-    )
+    try:
+        response = requests.get(
+            url=subscribe_url,
+            headers=get_headers(token=token),
+        )
+    except Exception as error:
+        bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % error)
+        return None
     return response
 
 
-def delete_subscribe(user_id):
-    subscribe_url = f'{SERVER_API_SUBS_URL}{user_id}'
+def delete_subscriber(user_id) -> Response:
+    """Удаление пользователя из таблицы клиентов."""
+    subscribe_url = f"{SERVER_API_CUSTOMER_URL}{user_id}"
     token = os.getenv(key="ADMIN_TOKEN")
-    response = requests.delete(
-        url=subscribe_url,
-        headers=get_headers(token=token),
-    )
+    try:
+        response = requests.delete(
+            url=subscribe_url,
+            headers=get_headers(token=token),
+        )
+    except Exception as error:
+        bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % error)
+        return None
     return response

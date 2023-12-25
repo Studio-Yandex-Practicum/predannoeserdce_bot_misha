@@ -3,40 +3,23 @@ import os
 from http import HTTPStatus
 
 import requests
-from telegram import Message, ReplyKeyboardMarkup, Update
+from telegram import Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
 import keyboards as kb
-from constants import (
-    ADMIN_CHAT_ID,
-    LINK_BUTTONS,
-    MENU_SLEEP,
-    SERVER_API_CUSTOMER_URL,
-    START_SLEEP,
-    ConvState,
-    MainCallbacks,
-    PaginationCallback,
-)
-from message_config import (
-    BotLogMessage,
-    ConversationLogMessage,
-    ConversationTextMessage,
-    InlineButtonText,
-    MainMessage,
-    SubscribeTextMessage,
-)
-from requests_db import get_faq, check_subscribe, delete_subscribe
-from services import (
-    facts_to_str,
-    faq_pages_count,
-    format_error_messages,
-    get_data_to_send,
-    get_data_to_user,
-    get_headers,
-    send_question_email,
-    send_question_tg,
-)
+from constants import (ADMIN_CHAT_ID, LINK_BUTTONS, MENU_SLEEP,
+                       SERVER_API_CUSTOMER_URL, START_SLEEP, BanList,
+                       ConvState, MainCallbacks, MenuFuncButton,
+                       OneButtonItems, PaginationCallback)
+from message_config import (BotLogMessage, ConversationLogMessage,
+                            ConversationTextMessage, InlineButtonText,
+                            MainMessage, SubscribeTextMessage)
+from requests_db import delete_subscriber, get_faq
+from services import (check_user_at_ban, faq_pages_count,
+                      format_error_messages, format_user_data_to_msg,
+                      get_data_to_send, get_headers, send_question_email,
+                      send_question_tg)
 from settings import bot_logger
 from validators import email_validate, fullname_validate, phone_validate
 
@@ -74,7 +57,7 @@ async def handle_show_main_menu(
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=MainMessage.MENU,
-        reply_markup=await kb.get_main_menu(update.message.from_user.id),
+        reply_markup=await kb.get_main_menu(user_id=update.effective_chat.id),
     )
     bot_logger.info(msg=BotLogMessage.SHOW_MAIN_MENU)
 
@@ -92,7 +75,9 @@ async def handle_text_message(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Обрабатывает текстовые сообщения."""
-    if update.message.reply_to_message:
+    if update.message.text.lower() == OneButtonItems.MENU.lower():
+        await handle_show_main_menu(update=update, context=context)
+    elif update.message.reply_to_message:
         await handle_admin_answer(update=update, context=context)
     else:
         await handle_alert_message(update=update, context=context)
@@ -270,10 +255,15 @@ async def conv_get_subject(
         msg=ConversationLogMessage.RECEIVED_PHONE
         % context.user_data["user_id"]
     )
-    if context.user_data["callback"] == "Подписаться на рассылку":
-        text, keyboard = await subscribe(user_data=user_data)
-        await update.message.reply_text(text=text, reply_markup=keyboard)
-        return ConversationHandler.END
+    if (
+        context.user_data["callback"].lower()
+        == MenuFuncButton.SUBSCRIBE.value.lower()
+        or context.user_data["callback"].lower()
+        == OneButtonItems.RETURN.lower()
+    ):
+        return await subscribe(
+            update=update, context=context, user_data=user_data
+        )
 
     await update.message.reply_text(
         text=ConversationTextMessage.WRITE_SUBJECT,
@@ -286,16 +276,29 @@ async def conv_get_question(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     """Получение сообщения от пользователя (кастомный вопрос)."""
-    context.user_data["subject"] = update.message.text
-    bot_logger.info(
-        msg=ConversationLogMessage.RECEIVED_SUBJECT
-        % context.user_data["user_id"]
-    )
-    await update.message.reply_text(
-        text=ConversationTextMessage.WRITE_QUESTION,
-        reply_markup=await kb.get_cancel_button(),
-    )
-
+    callback = context.user_data.get("callback", None)
+    text = ConversationTextMessage.WRITE_QUESTION
+    reply_markup = await kb.get_cancel_button()
+    if callback and callback != MainCallbacks.TG_QUESTION:
+        context.user_data["subject"] = update.message.text
+        bot_logger.info(
+            msg=ConversationLogMessage.RECEIVED_SUBJECT
+            % context.user_data["user_id"]
+        )
+        await update.message.reply_text(text=text, reply_markup=reply_markup)
+    else:
+        query = update.callback_query
+        await query.answer()
+        context.user_data["callback"] = query.data
+        context.user_data["user_id"] = query.from_user.id
+        context.user_data[
+            "entry_text"
+        ] = InlineButtonText.CUSTOM_QUESTION.lower()
+        if check_user_at_ban(user_id=query.from_user.id):
+            return await handle_user_at_ban(update=update, context=context)
+        await context.bot.send_message(
+            chat_id=query.from_user.id, text=text, reply_markup=reply_markup
+        )
     return ConvState.SEND
 
 
@@ -331,6 +334,7 @@ async def conv_end(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     bot_logger.info(
         msg=ConversationLogMessage.END % context.user_data["user_id"]
     )
+    context.user_data["callback"] = None
     return ConversationHandler.END
 
 
@@ -346,6 +350,7 @@ async def conv_cancel(
         % context.user_data.get("entry_text", "продолжить"),
         reply_markup=await kb.get_main_menu(update.message.from_user.id),
     )
+    context.user_data["callback"] = None
     return ConversationHandler.END
 
 
@@ -358,14 +363,14 @@ async def handle_admin_answer(
     """Обработка ответа администратора, отправка его пользователю."""
     if update.message.from_user.id != int(ADMIN_CHAT_ID):
         return None
-    text = update.message.reply_to_message.text.split(sep=",")
-    to_chat_id = int([s for s in text if "id:" in s][0].split(sep=":")[-1])
+    text = update.message.reply_to_message.text.split()
+    to_chat_id = int(next(word for word in text if "id:" in word)[3:])
 
     await context.bot.send_message(
         chat_id=to_chat_id,
         text=ConversationTextMessage.ANSWER_FROM_ADMIN % update.message.text,
         parse_mode=ParseMode.HTML,
-        reply_markup=await kb.get_main_menu(update.message.from_user.id),
+        reply_markup=await kb.get_main_menu(user_id=to_chat_id),
     )
     bot_logger.info(msg=ConversationLogMessage.ANSWER_FROM_ADMIN % to_chat_id)
 
@@ -383,7 +388,6 @@ async def handle_error_callback(
     bot_logger.info(msg=ConversationLogMessage.ERROR_TO_ADMIN)
     await query.edit_message_text(
         text=ConversationTextMessage.ERROR_THANKS,
-        # reply_markup=await kb.remove_menu(),
     )
     query.answer()
     await handle_show_main_menu(
@@ -391,7 +395,10 @@ async def handle_error_callback(
     )
 
 
-async def subscribe(user_data) -> tuple[str, ReplyKeyboardMarkup]:
+async def subscribe(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, user_data: dict
+) -> int:
+    """Подписка на рассылку."""
     token = os.getenv(key="ADMIN_TOKEN")
     response = requests.post(
         url=SERVER_API_CUSTOMER_URL,
@@ -399,26 +406,82 @@ async def subscribe(user_data) -> tuple[str, ReplyKeyboardMarkup]:
         headers=get_headers(token=token),
     )
     if response.status_code == HTTPStatus.CREATED:
-        facts = get_data_to_user(user_data=user_data)
-        text = f"{SubscribeTextMessage.DONE}{facts_to_str(user_data=facts)}"
+        bot_logger.info(
+            msg=ConversationLogMessage.SUBSCRIBE_SUCCESS % user_data["user_id"]
+        )
+        text = (
+            f"{SubscribeTextMessage.DONE}"
+            f"{format_user_data_to_msg(user_data=user_data)}"
+        )
         keyboard = await kb.get_menu_button()
     else:
         error = format_error_messages(text=response.text)
+        bot_logger.error(
+            msg=ConversationLogMessage.SUBSCRIBE_ERROR
+            % (error, user_data["user_id"])
+        )
         text = f"{SubscribeTextMessage.ERROR}{error}"
         keyboard = await kb.get_subscribe_buttons()
-
-    return text, keyboard
+    await update.message.reply_text(
+        text=text, reply_markup=keyboard, parse_mode=ParseMode.HTML
+    )
+    context.user_data["callback"] = None
+    return ConversationHandler.END
 
 
 async def unsubscribe(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    """Отписка от подписки на рассылку."""
     id = update.message.from_user.id
-    if delete_subscribe(user_id=id).status_code == HTTPStatus.NO_CONTENT:
-        text = SubscribeTextMessage.UNSUBS
+    response = delete_subscriber(user_id=id)
+    if response.status_code == HTTPStatus.NO_CONTENT:
+        text = SubscribeTextMessage.UNSUBSCRIBE
+        bot_logger.info(msg=ConversationLogMessage.UNSUSCRIBE_SUCCESS % id)
     else:
-        text = SubscribeTextMessage.ERROR
+        error = format_error_messages(text=response.text)
+        text = f"{SubscribeTextMessage.ERROR}{error}"
+        bot_logger.error(
+            msg=ConversationLogMessage.UNSUBSCRIBE_ERROR
+            % (f"status.code={response.status_code}, error={error}", id)
+        )
     await update.message.reply_text(
         text=text,
-        reply_markup=await kb.get_main_menu(id),
+        reply_markup=await kb.get_main_menu(user_id=id),
     )
+
+
+async def handle_to_ban(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Добавление пользователя в чёрный список."""
+    query = update.callback_query
+    context.user_data["callback"] = query.data
+    text = query.message.text.split()
+    user_id = next(word for word in text if "id:" in word)[3:]
+    with open(
+        file=BanList.FILENAME, mode="a", encoding=BanList.ENCODING
+    ) as file:
+        file.write(user_id + "\n")
+    bot_logger.info(msg=BotLogMessage.USER_ADD_TO_BAN % user_id)
+    await query.answer()
+    await query.edit_message_text(
+        text=ConversationTextMessage.USER_ADD_TO_BAN % user_id
+    )
+
+
+async def handle_user_at_ban(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Заканчивает общение, т.к. пользователь в чёрном списке."""
+    await update.effective_message.edit_text(
+        text=ConversationTextMessage.USER_EXIST_AT_BAN,
+    )
+    await handle_show_main_menu(
+        update=update, context=context, delay=START_SLEEP
+    )
+    bot_logger.info(
+        msg=BotLogMessage.USER_EXIST_AT_BAN % context.user_data["user_id"]
+    )
+    context.user_data["callback"] = None
+    return ConversationHandler.END

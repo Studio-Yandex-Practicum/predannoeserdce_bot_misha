@@ -17,11 +17,7 @@ from constants import (
     OneButtonItems,
     PaginationCallback,
 )
-from message_config import (
-    BotLogMessage,
-    InlineButtonText,
-    PlaceholderMessage,
-)
+from message_config import BotLogMessage, InlineButtonText, PlaceholderMessage
 from requests_db import check_subscribe
 from services import faq_buttons, faq_pages_count
 from settings import bot_logger
@@ -53,9 +49,7 @@ async def get_main_menu(user_id) -> ReplyKeyboardMarkup:
         main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.SUBSCRIBE])
     else:
         main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.UNSUBSCRIBE])
-    btn_list = main_btn_list + list(
-        LINK_BUTTONS.keys()
-    )
+    btn_list = main_btn_list + list(LINK_BUTTONS.keys())
     btn_idx = 0
     while btn_idx < len(btn_list):
         row = []
@@ -178,10 +172,24 @@ async def get_back_to_faq() -> InlineKeyboardMarkup:
 
 
 async def get_subscribe_buttons() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=OneButtonItems.RETURN.capitalize())],
-            [KeyboardButton(text=OneButtonItems.MENU.upper())],
-        ],
-        resize_keyboard=True,
-    )
+    """Создаёт кнопки для возврата в меню и новой попытки подписки."""
+    keyboard = [
+        [KeyboardButton(text=OneButtonItems.RETURN.capitalize())],
+        [KeyboardButton(text=OneButtonItems.MENU.upper())],
+    ]
+    bot_logger.info(msg=BotLogMessage.CREATE_SUBSCRIBE_KB)
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+async def get_to_ban_button() -> InlineKeyboardMarkup:
+    """Создаёт кнопку добавления пользователя в чёрный список."""
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text=InlineButtonText.USER_TO_BAN,
+                callback_data=MainCallbacks.USER_TO_BAN,
+            )
+        ]
+    ]
+    bot_logger.info(msg=BotLogMessage.CREATE_TO_BAN_KB)
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
