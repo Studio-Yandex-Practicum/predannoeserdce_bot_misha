@@ -1,4 +1,3 @@
-# regular_messages
 import logging
 import json
 import os
@@ -12,7 +11,8 @@ from dotenv import load_dotenv
 from requests.exceptions import RequestException
 from telegram.error import InvalidToken
 
-from .models import Messages, Customer
+from app.models import Customer, Messages
+
 
 load_dotenv()
 
@@ -28,8 +28,9 @@ URLD = 'https://api.thedogapi.com/v1/images/search'
 URLC = 'https://api.thecatapi.com/v1/images/search'
 URLTEXT = 'https://api.forismatic.com/api/1.0/?method=getQuote&format=jsonp&jsonp=parseQuote'  # noqa
 SLEEP_BETWEEN = 0.4
-SCHEDULER_PERIOD = 60  # seconds
-CHOICES = [1, 2, 3, 4]  # количество рэндомных фнукций
+SCHEDULER_PERIOD = 60
+CHOICES = [1, 2, 3, 4]
+
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -46,14 +47,14 @@ def start_scheduler():
     иначе возникает ошибка при ошибочной
     повторной отмене планировщика администратором
     """
-    global scheduler  # Объявляем глобальную переменную
+    global scheduler
     try:
         if scheduler.running:
             scheduler.shutdown(wait=False)
     except Exception as e:
         logger.error(f"Ошибка при остановке планировщика: {e}")
 
-    scheduler = BackgroundScheduler()  # Создаем новый объект планировщика
+    scheduler = BackgroundScheduler()
 
     scheduler.add_job(
         send_schedular_messages, 'interval',
@@ -88,7 +89,7 @@ def get_random_positive_thought():
     """Умные мысли"""
     try:
         response = requests.get(URLTEXT)
-        response.raise_for_status()  # Raises HTTPError if any
+        response.raise_for_status()
         jsonp_content = response.text
         start_pos = jsonp_content.find('(') + 1
         end_pos = jsonp_content.rfind(')')
@@ -176,7 +177,7 @@ def send_messages(selected_messages=None):
             logger.error(
                 f"Ошибка с отправкой сообщений на chat ID {chat_id}: {e}"
             )
-        time.sleep(max(SLEEP_BETWEEN, 0.1))  # возможный антиспам для телеграм
+        time.sleep(max(SLEEP_BETWEEN, 0.1))
 
 
 def send_schedular_messages(selected_messages=None):
@@ -186,7 +187,7 @@ def send_schedular_messages(selected_messages=None):
     chat_ids = get_chat_ids()
     selected_messages = Messages.objects.filter(
         selected=True
-    )  # если админ решил добавить свое сообщение в рассылку
+    )
     for chat_id in chat_ids:
         try:
             if selected_messages:
@@ -198,4 +199,4 @@ def send_schedular_messages(selected_messages=None):
             logger.error(
                 f"Ошибка с отправкой сообщений на chat ID {chat_id}: {e}"
             )
-        time.sleep(max(SLEEP_BETWEEN, 0.1))  # возможный антиспам для телеграм
+        time.sleep(max(SLEEP_BETWEEN, 0.1))

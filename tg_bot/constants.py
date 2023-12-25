@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import os
 from enum import Enum
 
@@ -11,20 +11,23 @@ load_dotenv()
 # Константы для телеграма
 TELEGRAM_TOKEN = os.getenv(key="TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv(key="ADMIN_CHAT_ID")
-
-
-# Уровень логгера
-LOGGING_LEVEL = logging.INFO
+ADMIN_LOGIN = os.getenv("ADMIN_LOGIN")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 
 # Функциональные кнопки меню
 class MenuFuncButton(str, Enum):
     FAQ = "частые вопросы"
     SUBSCRIBE = "подписаться на рассылку"
+    UNSUBSCRIBE = "отписаться от рассылки"
 
 
 # Ссылочные кнопки меню
 LINK_BUTTONS: dict[str, LinkButtonAttributes] = {
+    "срочный сбор": LinkButtonAttributes(
+        text="Перейдите по ссылке, чтобы поучаствовать в срочном сборе",
+        url="https://predannoeserdce.ru/catalog-help/srochnyj-sbor-na-arendu/",
+    ),
     "попечительство": LinkButtonAttributes(
         text="Условия попечительства можно посмотреть на сайте",
         url="https://predannoeserdce.ru/programmy-prijuta/popechitelstvo/",
@@ -54,23 +57,32 @@ FAQ_PER_PAGE = 5
 class OneButtonItems:
     MENU = "главное меню"
     CANCEL = "назад в меню"
+    RETURN = "попробовать еще раз"
 
 
 # Задержки
 START_SLEEP = 1
 MENU_SLEEP = 3
 
+# ---- Данные с сервера ---- #
+
 # Получение и обновление списка вопросов
 SERVER_API_FAQ_URL = os.getenv(key="SERVER_API_FAQ_URL")
 FAQ_UPDATE_INTERVAL_MINUTES = 10
+
+# Токен
+SERVER_API_TOKEN_URL = os.getenv(key="SERVER_API_TOKEN_URL")
+TOKEN_UPDATE_HOURS = 12
+
+# Подписка
+SERVER_API_CUSTOMER_URL = os.getenv(key="SERVER_API_CUSTOMER_URL")
 
 
 # Проверки введенного текста
 class RegexText:
     USER_FULLNAME = r"(\b[А-ЯЁ]{1}[а-яё]+\b)"
-    CANCEL = rf"^{OneButtonItems.CANCEL}$"
     EMAIL = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    PHONE = r"^\+7\d{10}$"
+    PHONE = r"^[7|8]\d{10}$"
 
 
 # Стадии разговора
@@ -80,6 +92,7 @@ class ConvState(int, Enum):
     SUBJECT = 2
     QUESTION = 3
     SEND = 4
+    SUBSCRIBE = 5
 
 
 class PaginationCallback:
@@ -95,6 +108,7 @@ class MainCallbacks:
     EMAIL_QUESTION = "email_question"
     BACK_TO_FAQ = "back_to_faq"
     SERVER_ERROR = "server_error"
+    USER_TO_BAN = "user_to_ban"
 
 
 # Настройки логгера:
@@ -106,3 +120,29 @@ class LogSetting:
     ENCODING = "utf8"
     FILESIZE = 1024 * 1024
     FILECOUNT = 3
+
+
+# Черный список
+class BanList:
+    FILENAME = "bot_ban/blacklist.txt"
+    ENCODING = "utf8"
+
+
+# Рабочее время администратора
+class AdminWorkTime:
+    START_H = 10
+    START_MIN = 0
+    END_H = 20
+    END_MIN = 0
+    TIMEZONE = "Europe/Moscow"
+
+
+class DelayedQuestionsAttr:
+    FILENAME = "delayed_qstns.txt"
+    ENCODING = "utf8"
+    MSG_SEPARATOR = "\n__!РАЗДЕЛИТЕЛЬ!__\n"
+
+
+class DelayedQuestionsSendDelay:
+    MINIMUM = 2
+    MAXIMUM = 7

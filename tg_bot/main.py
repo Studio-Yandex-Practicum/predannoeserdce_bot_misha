@@ -1,62 +1,47 @@
 ﻿import re
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
-    ConversationHandler,
     MessageHandler,
     filters,
 )
 
 import keyboards as kb
+from apscher import scheduller_initial
 from constants import (
-    FAQ_UPDATE_INTERVAL_MINUTES,
     LINK_BUTTONS,
     START_SLEEP,
     TELEGRAM_TOKEN,
-    ConvState,
     MainCallbacks,
     MenuFuncButton,
-    RegexText,
 )
-from handlers import (
-    conv_cancel,
-    conv_end,
-    conv_get_email,
-    conv_get_phone,
-    conv_get_question,
-    conv_get_subject,
+from handlers.ban import handle_to_ban
+from handlers.basic import (
     handle_alert_message,
-    handle_conv_callback,
     handle_error_callback,
-    handle_faq_button,
-    handle_faq_callback,
     handle_show_main_menu,
     handle_text_message,
     handle_url_button,
-    update_faq,
 )
-from message_config import MESSAGES
-
-scheduller = AsyncIOScheduler()
-scheduller.add_job(
-    func=update_faq,
-    trigger="interval",
-    minutes=FAQ_UPDATE_INTERVAL_MINUTES,
+from handlers.conv_data_collection import (
+    data_collect_handler,
+    tg_question_handler,
 )
-scheduller.start()
-update_faq()
+from handlers.faq import handle_faq_button, handle_faq_callback, update_faq
+from handlers.subscribe import unsubscribe
+from message_config import MainMessage
+from requests_db import get_token
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Отвечает пользователю на команду /start."""
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=MESSAGES["start"],
+        text=MainMessage.START,
         reply_markup=await kb.remove_menu(),
     )
     await handle_show_main_menu(
@@ -67,61 +52,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Запуск бота."""
     application = ApplicationBuilder().token(token=TELEGRAM_TOKEN).build()
-    cancel_pattern = re.compile(pattern=RegexText.CANCEL, flags=re.IGNORECASE)
+    bot = application.bot
+
+    scheduller = scheduller_initial(bot=bot)
+    scheduller.start()
+    update_faq()
+    get_token()
+
     handlers = [
-        ConversationHandler(
-            entry_points=[
-                CallbackQueryHandler(
-                    callback=handle_conv_callback,
-                    pattern=MainCallbacks.TG_QUESTION,
-                ),
-                CallbackQueryHandler(
-                    callback=handle_conv_callback,
-                    pattern=MainCallbacks.EMAIL_QUESTION,
-                ),
-            ],
-            states={
-                ConvState.EMAIL: [
-                    MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
-                        callback=conv_get_email,
-                    ),
-                ],
-                ConvState.PHONE: [
-                    MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
-                        callback=conv_get_phone,
-                    ),
-                ],
-                ConvState.SUBJECT: [
-                    MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
-                        callback=conv_get_subject,
-                    )
-                ],
-                ConvState.QUESTION: [
-                    MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
-                        callback=conv_get_question,
-                    )
-                ],
-                ConvState.SEND: [
-                    MessageHandler(
-                        filters=(filters.TEXT & ~filters.COMMAND),
-                        callback=conv_end,
-                    )
-                ],
-            },
-            fallbacks=[
-                MessageHandler(
-                    filters=(filters.Regex(pattern=cancel_pattern)),
-                    callback=conv_cancel,
-                ),
-                CommandHandler(command="menu", callback=conv_cancel),
-            ],
-        ),
-        CommandHandler(command="start", callback=start),
-        CommandHandler(command="menu", callback=handle_show_main_menu),
+        data_collect_handler,
+        tg_question_handler,
         MessageHandler(
             filters=(
                 filters.Regex(
@@ -132,6 +72,17 @@ def main() -> None:
                 )
             ),
             callback=handle_faq_button,
+        ),
+        MessageHandler(
+            filters=(
+                filters.Regex(
+                    pattern=re.compile(
+                        pattern=rf"{MenuFuncButton.UNSUBSCRIBE.value}",
+                        flags=re.IGNORECASE,
+                    )
+                )
+            ),
+            callback=unsubscribe,
         ),
         MessageHandler(
             filters=(
@@ -151,11 +102,16 @@ def main() -> None:
         CallbackQueryHandler(
             callback=handle_error_callback, pattern=MainCallbacks.SERVER_ERROR
         ),
+        CallbackQueryHandler(
+            callback=handle_to_ban, pattern=MainCallbacks.USER_TO_BAN
+        ),
         CallbackQueryHandler(callback=handle_faq_callback),
         MessageHandler(
             filters=(filters.AUDIO | filters.PHOTO | filters.Sticker.ALL),
             callback=handle_alert_message,
         ),
+        CommandHandler(command="start", callback=start),
+        CommandHandler(command="menu", callback=handle_show_main_menu),
     ]
     for handler in handlers:
         application.add_handler(handler=handler)
