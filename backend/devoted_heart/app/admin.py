@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 from django.contrib import admin
 from django.contrib.admin.actions import delete_selected

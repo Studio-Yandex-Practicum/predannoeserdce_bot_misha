@@ -39,8 +39,7 @@ class FAQ(models.Model):
     class Meta:
         ordering = ('order',)
         verbose_name = 'Часто задаваемые вопросы'
-        verbose_name_plural = 'Часто задаваемые вопросы'        
-
+        verbose_name_plural = 'Часто задаваемые вопросы'
 
     def __str__(self) -> str:
         return f'{self.question}'
