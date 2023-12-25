@@ -3,6 +3,7 @@ version: '3.3'
 volumes:
   sql_database:
   static:
+  media:
   bot_logs:
 
 services:
@@ -13,6 +14,7 @@ services:
     volumes:
       - sql_database:/backend/database/
       - static:/backend_static/
+      - media:/media/
     restart: always
   bot:
     build: ./tg_bot/
@@ -30,6 +32,7 @@ services:
     container_name: gateway
     volumes:
       - static:/staticfiles/
+      - media:/media/
     depends_on:
       - backend
     ports:
