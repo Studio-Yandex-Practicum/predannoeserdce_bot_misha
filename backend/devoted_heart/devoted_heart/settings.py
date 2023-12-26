@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',  # new line
+    'rest_framework_simplejwt',  # new line
     'django_object_actions',
     'djoser',
     'import_export',
