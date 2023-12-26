@@ -147,7 +147,7 @@ async def send_delayed_questions(bot):
         encoding=DelayedQuestionsAttr.ENCODING,
     ) as file:
         text = file.readlines()
-    if text == "":
+    if not text:
         return None
     msg_list = "".join(text).split(sep=DelayedQuestionsAttr.MSG_SEPARATOR)
     bot_logger.info(msg=DelayedQstnsLogMessage.SEND_START)
