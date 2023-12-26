@@ -107,7 +107,7 @@ def main() -> None:
         ),
         CallbackQueryHandler(callback=handle_faq_callback),
         MessageHandler(
-            filters=(filters.AUDIO | filters.PHOTO | filters.Sticker.ALL),
+            filters=(~filters.TEXT),
             callback=handle_alert_message,
         ),
         CommandHandler(command="start", callback=start),
