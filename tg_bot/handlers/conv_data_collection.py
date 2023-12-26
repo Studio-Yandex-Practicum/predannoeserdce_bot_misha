@@ -223,13 +223,13 @@ async def conv_cancel(
 cancel_pattern = re.compile(
     pattern=rf"^{OneButtonItems.CANCEL}$", flags=re.IGNORECASE
 )
-skip_cancel_pattern = re.compile(
-    pattern=rf"^(?!.*\b{OneButtonItems.CANCEL}\b).*$", flags=re.IGNORECASE
-)
 subscribe_pattern = re.compile(
     pattern=rf"^(?:{MenuFuncButton.SUBSCRIBE.value}|"
     f"{OneButtonItems.RETURN})$",
     flags=re.IGNORECASE,
+)
+conv_filters = (
+    ~filters.Regex(pattern=cancel_pattern) & filters.TEXT & ~filters.COMMAND
 )
 
 
@@ -247,34 +247,31 @@ data_collect_handler = ConversationHandler(
     states={
         ConvState.EMAIL: [
             MessageHandler(
-                filters=(
-                    filters.Regex(pattern=skip_cancel_pattern)
-                    & ~filters.COMMAND
-                ),
+                filters=conv_filters,
                 callback=conv_get_email,
             ),
         ],
         ConvState.PHONE: [
             MessageHandler(
-                filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                filters=conv_filters,
                 callback=conv_get_phone,
             ),
         ],
         ConvState.SUBJECT: [
             MessageHandler(
-                filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                filters=conv_filters,
                 callback=conv_get_subject,
             )
         ],
         ConvState.QUESTION: [
             MessageHandler(
-                filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                filters=conv_filters,
                 callback=conv_get_question,
             )
         ],
         ConvState.SEND: [
             MessageHandler(
-                filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                filters=conv_filters,
                 callback=conv_end,
             )
         ],
@@ -287,6 +284,7 @@ data_collect_handler = ConversationHandler(
     ],
 )
 
+
 tg_question_handler = ConversationHandler(
     entry_points=[
         CallbackQueryHandler(
@@ -297,7 +295,7 @@ tg_question_handler = ConversationHandler(
     states={
         ConvState.SEND: [
             MessageHandler(
-                filters=(filters.Regex(pattern=skip_cancel_pattern)),
+                filters=conv_filters,
                 callback=conv_end,
             )
         ],
