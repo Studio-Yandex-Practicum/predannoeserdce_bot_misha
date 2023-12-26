@@ -16,7 +16,7 @@ from app.models import Customer, Messages
 
 load_dotenv()
 
-TELEGRAM_TOKEN = os.getenv("TOKEN")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 try:
     pass
