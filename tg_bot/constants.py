@@ -24,29 +24,17 @@ class MenuFuncButton(str, Enum):
 
 # Ссылочные кнопки меню
 LINK_BUTTONS: dict[str, LinkButtonAttributes] = {
-    "срочный сбор": LinkButtonAttributes(
-        text="Перейдите по ссылке, чтобы поучаствовать в срочном сборе",
-        url="https://predannoeserdce.ru/catalog-help/srochnyj-sbor-na-arendu/",
-    ),
-    "попечительство": LinkButtonAttributes(
-        text="Условия попечительства можно посмотреть на сайте",
-        url="https://predannoeserdce.ru/programmy-prijuta/popechitelstvo/",
-    ),
-    "пожертвование": LinkButtonAttributes(
+    "сделать пожертвование": LinkButtonAttributes(
         text="Сделать пожертвование можно перейдя по ссылке",
-        url="https://predannoeserdce.ru/help/",
+        url="https://predannoeserdce.ru/sms-pozhertvovanie/",
     ),
-    "взять котика": LinkButtonAttributes(
-        text="Взять котика домой можно по ссылке",
-        url="https://predannoeserdce.ru/howtohelp/take-home/",
+    "список животных": LinkButtonAttributes(
+        text="Перейти на страницу со списком животных в приюте",
+        url="https://predannoeserdce.ru/catalog/",
     ),
-    "посмотреть котиков": LinkButtonAttributes(
-        text="Посмотреть котиков можно по ссылке",
-        url="https://predannoeserdce.ru/catalog-opeka/",
-    ),
-    "перейти на сайт приюта": LinkButtonAttributes(
-        text="Перейти на главную страницу",
-        url="https://predannoeserdce.ru/",
+    "попечительская программа": LinkButtonAttributes(
+        text="Целевая страница для участия в Попечительской программе",
+        url="https://predannoeserdce.ru/programmy-prijuta/popechitelstvo/",
     ),
 }
 MENU_LAYOUT = 3
