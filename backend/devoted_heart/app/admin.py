@@ -137,3 +137,7 @@ delete_selected.short_description = 'Удалить выбранное'
 admin.site.register(FAQ, FAQAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Messages, MessagesAdmin)
+
+admin.site.site_header = 'Преданное сердце'
+admin.site.site_title = 'Преданное сердце'
+admin.site.index_title = 'Управление'
