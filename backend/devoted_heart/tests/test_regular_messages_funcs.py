@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from django.test import TestCase
 from app.regular_messages import (
     send_regular_message, get_chat_ids, get_random_text,
@@ -11,10 +11,6 @@ from app.regular_messages import (
 class RegularMessagesTestCase(TestCase):
     def setUp(self):
         self.chat_ids = ['123', '456', '789']
-        self.selected_messages = MagicMock(name='selected_messages')
-        self.message = MagicMock(name='message')
-        self.customer = MagicMock(name='customer')
-        self.customer.tg_id = '123'
 
     @patch('app.regular_messages.Customer.objects.all')
     def test_get_chat_ids_success(self, mock_customer_all):
