@@ -172,7 +172,8 @@ def send_messages(selected_messages=None):
             if selected_messages:
                 for message_text in selected_messages:
                     bot.send_message(chat_id, message_text.text)
-                    bot.send_photo(chat_id, message_text.image)
+                    if message_text.image:
+                        bot.send_photo(chat_id, message_text.image)
         except Exception as e:
             logger.error(
                 f"Ошибка с отправкой сообщений на chat ID {chat_id}: {e}"
