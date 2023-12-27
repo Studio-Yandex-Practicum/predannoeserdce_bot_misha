@@ -17,6 +17,7 @@ class ViewsTestCase(TestCase):
         )
 
     def test_custom_login_view(self):
+        """Тест login view"""
         response = self.client.post(
             '/api/auth/token/login/',
             {
@@ -28,4 +29,19 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_custom_logout_view(self):
-        pass
+        """
+        Тест logout view.
+        До logout user должен пройти аутентификацию и
+        получить токен.
+        """
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            '/api/auth/token/login/',
+            {'email': 'testuser@example.com', 'password': 'testpassword'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        token = response.data.get('auth_token')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        response = self.client.post('/api/auth/token/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
