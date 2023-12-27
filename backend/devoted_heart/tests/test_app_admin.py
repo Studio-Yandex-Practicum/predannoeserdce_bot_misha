@@ -38,7 +38,7 @@ class MessagesAdminTest(TestCase):
         )
 
     def setUp(self):
-        User = get_user_model()  # в тесте ушли от модели юзерс
+        User = get_user_model()
         self.user = User.objects.create_user(
             username='admin', password='admin123', is_staff=True
         )
@@ -49,9 +49,6 @@ class MessagesAdminTest(TestCase):
             self.message = Messages.objects.create(
                 text='Test Message', image=temp_image.name, selected=False
             )
-        """self.message = Messages.objects.create(
-            text='Test Message', image=None, selected=False
-        )"""
 
     def test_send_messages_view(self):
         self.client.login(username='admin', password='admin123')
