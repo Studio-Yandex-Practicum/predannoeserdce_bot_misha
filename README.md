@@ -25,7 +25,8 @@
 - Выгрузка контактных данных людей помогающих приюту для информирования через телефон или email
 
 ## Команда
-- [Михаил Приселков](https://github.com/BaronFAS "Github page")
+- [Михаил Столопов](https://github.com/MikeStol)
+- [Михаил Приселков](https://github.com/BaronFAS)
 - [Roman Tarasenko](https://github.com/tarrim80)
 - [Николай Каменский](https://github.com/Rolicat)
 - [Алексей Потанин](https://github.com/potashka)
