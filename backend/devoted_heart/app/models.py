@@ -1,15 +1,28 @@
 from django.db import models
 
 
+class Category(models.Model):
+    """Категории вопросов."""
+    name = models.CharField(
+        verbose_name='Категория',
+        help_text='Категория',
+        blank=False,
+        null=False,
+        unique=True,
+        max_length=100,
+    )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+    def __str__(self) -> str:
+        return f'{self.name}'
+
+
 class FAQ(models.Model):
     """Часто задаваемый вопрос."""
-    class Category(models.TextChoices):
-        DONATION = 'DONATION', 'Пожертвование'
-        GUARDIANS = 'GUARDIANS', 'Опекунство'
-        ABOUT_US = 'ABOUT_US', 'О нас'
-        PROGRAMS = 'PROGRAMS', 'Программы'
-        GENERAL = 'GENERAL', 'Общие вопросы'
-
     question = models.TextField(
         verbose_name='Вопрос',
         help_text='Вопрос',
@@ -29,11 +42,12 @@ class FAQ(models.Model):
         blank=False,
         null=False,
     )
-    category = models.CharField(
-        max_length=10,
-        choices=Category.choices,
-        default=Category.GENERAL,
-        verbose_name='Категория'
+    category = models.ForeignKey(
+        Category,
+        verbose_name='Категория',
+        help_text='Категория',
+        on_delete=models.CASCADE,
+        related_name='questions',
     )
 
     class Meta:

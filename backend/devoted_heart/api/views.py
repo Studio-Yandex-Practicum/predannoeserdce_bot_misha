@@ -47,8 +47,12 @@ class FAQViewset(
         old_results = res.data['results']
         for old_result in old_results:
             id = old_result['id']
+            category = old_result['category']
             del old_result['id']
-            new_results[id] = OrderedDict(**old_result)
+            del old_result['category']
+            if category not in new_results:
+                new_results[category] = {}
+            new_results[category][id] = OrderedDict(**old_result)
         res.data['results'] = new_results
         return res
 

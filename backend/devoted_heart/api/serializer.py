@@ -17,10 +17,11 @@ class CustomLoginSerializer(TokenObtainPairSerializer):
 
 class FAQSerializer(serializers.ModelSerializer):
     """Сериализатор для модели FAQ."""
+    category = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = FAQ
-        fields = ('id', 'question', 'answer', 'order')
+        fields = ('id', 'question', 'answer', 'order', 'category')
 
 
 class CustomerSerializer(serializers.ModelSerializer):
