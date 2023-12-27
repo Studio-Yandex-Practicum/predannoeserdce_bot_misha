@@ -8,11 +8,17 @@ from import_export import resources
 from import_export.admin import ImportExportActionModelAdmin
 from rangefilter.filters import DateRangeFilterBuilder
 from app.forms import MessagesForm
-from app.models import Customer, FAQ, Messages
+from app.models import Customer, FAQ, Messages, Category
 from core.constants import EMPTY_FIELD_VALUE
 from app.regular_messages import send_messages, start_scheduler, stop_scheduler
 
 logger = logging.getLogger(__name__)
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    """Админка модели Категории."""
+    list_display = ('pk', 'name',)
+    list_display_links = ('name',)
 
 
 class FAQResource(resources.ModelResource):
@@ -137,6 +143,7 @@ delete_selected.short_description = 'Удалить выбранное'
 admin.site.register(FAQ, FAQAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Messages, MessagesAdmin)
+admin.site.register(Category, CategoryAdmin)
 
 admin.site.site_header = 'Преданное сердце'
 admin.site.site_title = 'Преданное сердце'
