@@ -9,15 +9,18 @@ from telegram import (
 )
 
 from constants import (
-    FAQ_PER_PAGE,
     LINK_BUTTONS,
     MENU_LAYOUT,
     MainCallbacks,
     MenuFuncButton,
     OneButtonItems,
-    PaginationCallback,
 )
-from message_config import BotLogMessage, InlineButtonText, PlaceholderMessage
+from message_config import (
+    BotLogMessage,
+    InlineButtonText,
+    MainMessage,
+    PlaceholderMessage,
+)
 from requests_db import check_subscribe
 from services import get_navigation_buttons, get_page_list, get_pages_count
 from settings import bot_logger
@@ -92,10 +95,20 @@ async def get_categories_menu(
     """Создает клавиатуру с категориями вопросов."""
     pages_count = await get_pages_count(queryset=categories)
     page_list = await get_page_list(queryset=categories, page=page)
-    keyboard = [
-        [InlineKeyboardButton(text=item, callback_data=item)]
-        for item in page_list
-    ]
+    if page_list[0] == MainMessage.SERVER_ERROR:
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text=MainMessage.SERVER_ERROR,
+                    callback_data=MainCallbacks.SERVER_ERROR,
+                )
+            ]
+        ]
+    else:
+        keyboard = [
+            [InlineKeyboardButton(text=item, callback_data=item)]
+            for item in page_list
+        ]
     bot_logger.info(msg=BotLogMessage.CREATE_CATEGORY_KB % page)
     if pages_count != 1:
         navigation_buttons = await get_navigation_buttons(
