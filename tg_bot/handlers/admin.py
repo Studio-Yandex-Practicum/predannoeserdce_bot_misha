@@ -2,10 +2,10 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-import keyboards as kb
-from constants import ADMIN_CHAT_ID
-from message_config import ConversationLogMessage, ConversationTextMessage
-from settings import bot_logger
+import core.keyboards as kb
+from core.constants import ADMIN_CHAT_ID
+from core.message_config import ConversationLogMessage, ConversationTextMessage
+from core.settings import bot_logger
 
 
 async def handle_admin_answer(

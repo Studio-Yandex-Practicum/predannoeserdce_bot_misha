@@ -2,11 +2,11 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-import keyboards as kb
-from constants import MainCallbacks, PaginationCallback
-from message_config import ConversationTextMessage, MainMessage
-from requests_db import get_faq
-from services import get_pages_count
+import core.keyboards as kb
+from core.constants import MainCallbacks, PaginationCallback
+from core.message_config import ConversationTextMessage, MainMessage
+from core.requests_db import get_faq
+from core.services import get_pages_count
 
 
 def update_faq() -> None:

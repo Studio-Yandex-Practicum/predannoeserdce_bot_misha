@@ -3,16 +3,21 @@ import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
 
-import keyboards as kb
-from constants import ADMIN_CHAT_ID, LINK_BUTTONS, MENU_SLEEP, OneButtonItems
+import core.keyboards as kb
+from core.constants import (
+    ADMIN_CHAT_ID,
+    LINK_BUTTONS,
+    MENU_SLEEP,
+    OneButtonItems,
+)
 from handlers.admin import handle_admin_answer
-from message_config import (
+from core.message_config import (
     BotLogMessage,
     ConversationLogMessage,
     ConversationTextMessage,
     MainMessage,
 )
-from settings import bot_logger
+from core.settings import bot_logger
 
 
 async def handle_show_menu_btn(

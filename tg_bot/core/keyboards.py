@@ -8,23 +8,27 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 
-from constants import (
+from core.constants import (
     LINK_BUTTONS,
     MENU_LAYOUT,
     MainCallbacks,
     MenuFuncButton,
     OneButtonItems,
 )
-from message_config import (
+from core.message_config import (
     BotLogMessage,
     InlineButtonText,
     MainMessage,
     PlaceholderMessage,
 )
-from requests_db import check_subscribe
-from services import get_navigation_buttons, get_page_list, get_pages_count
-from settings import bot_logger
-from utils import LinkButtonAttributes
+from core.requests_db import check_subscribe
+from core.services import (
+    get_navigation_buttons,
+    get_page_list,
+    get_pages_count,
+)
+from core.settings import bot_logger
+from core.utils import LinkButtonAttributes
 
 
 async def get_menu_button() -> ReplyKeyboardMarkup:

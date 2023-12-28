@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from constants import LogSetting
+from core.constants import LogSetting
 
 logging.basicConfig(
     format=LogSetting.FORMAT,

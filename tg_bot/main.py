@@ -10,9 +10,9 @@ from telegram.ext import (
     filters,
 )
 
-import keyboards as kb
-from apscher import scheduller_initial
-from constants import (
+import core.keyboards as kb
+from core.apscher import scheduller_initial
+from core.constants import (
     LINK_BUTTONS,
     MASCOT_FILENAME,
     START_SLEEP,
@@ -40,8 +40,8 @@ from handlers.faq import (
     update_faq,
 )
 from handlers.subscribe import unsubscribe
-from message_config import MainMessage
-from requests_db import get_token
+from core.message_config import MainMessage
+from core.requests_db import get_token
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

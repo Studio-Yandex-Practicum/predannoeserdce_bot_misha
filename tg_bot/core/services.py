@@ -8,8 +8,8 @@ from telegram import InlineKeyboardButton, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-import keyboards as kb
-from constants import (
+import core.keyboards as kb
+from core.constants import (
     ADMIN_CHAT_ID,
     FAQ_PER_PAGE,
     AdminWorkTime,
@@ -18,14 +18,14 @@ from constants import (
     DelayedQuestionsSendDelay,
     PaginationCallback,
 )
-from message_config import (
+from core.message_config import (
     BotLogMessage,
     ConversationLogMessage,
     DelayedQstnsLogMessage,
     DelayedQstnsTextMessage,
     InlineButtonText,
 )
-from settings import bot_logger
+from core.settings import bot_logger
 
 
 async def check_work_time() -> bool:

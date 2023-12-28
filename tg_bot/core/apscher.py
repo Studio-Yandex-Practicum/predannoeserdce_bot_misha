@@ -1,14 +1,14 @@
 import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from constants import (
+from core.constants import (
     FAQ_UPDATE_INTERVAL_MINUTES,
     TOKEN_UPDATE_HOURS,
     AdminWorkTime,
 )
 from handlers.faq import update_faq
-from requests_db import get_token
-from services import send_delayed_questions
+from core.requests_db import get_token
+from core.services import send_delayed_questions
 
 
 def scheduller_initial(bot) -> AsyncIOScheduler:

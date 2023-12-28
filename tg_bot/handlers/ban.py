@@ -1,10 +1,10 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from constants import START_SLEEP, BanList
+from core.constants import START_SLEEP, BanList
 from handlers.basic import handle_show_main_menu
-from message_config import BotLogMessage, ConversationTextMessage
-from settings import bot_logger
+from core.message_config import BotLogMessage, ConversationTextMessage
+from core.settings import bot_logger
 
 
 async def handle_to_ban(

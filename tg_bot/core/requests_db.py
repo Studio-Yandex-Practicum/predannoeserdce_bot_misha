@@ -4,16 +4,15 @@ from http import HTTPStatus
 import requests
 from requests import Response
 
-from constants import (
+from core.constants import (
     ADMIN_LOGIN,
     ADMIN_PASSWORD,
     SERVER_API_CUSTOMER_URL,
     SERVER_API_FAQ_URL,
     SERVER_API_TOKEN_URL,
-    MainCallbacks,
 )
-from message_config import BotLogMessage, MainMessage
-from settings import bot_logger
+from core.message_config import BotLogMessage, MainMessage
+from core.settings import bot_logger
 
 
 def get_faq() -> dict[str | int, str]:

@@ -4,7 +4,7 @@ from enum import Enum
 
 from dotenv import load_dotenv
 
-from utils import LinkButtonAttributes
+from core.utils import LinkButtonAttributes
 
 load_dotenv()
 

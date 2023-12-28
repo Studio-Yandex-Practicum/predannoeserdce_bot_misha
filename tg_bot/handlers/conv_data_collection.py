@@ -9,8 +9,8 @@ from telegram.ext import (
     filters,
 )
 
-import keyboards as kb
-from constants import (
+import core.keyboards as kb
+from core.constants import (
     START_SLEEP,
     ConvState,
     MainCallbacks,
@@ -20,14 +20,18 @@ from constants import (
 from handlers.ban import handle_user_at_ban
 from handlers.basic import handle_show_main_menu
 from handlers.subscribe import subscribe
-from message_config import (
+from core.message_config import (
     ConversationLogMessage,
     ConversationTextMessage,
     InlineButtonText,
 )
-from services import check_user_at_ban, send_question_email, send_question_tg
-from settings import bot_logger
-from validators import email_validate, fullname_validate, phone_validate
+from core.services import (
+    check_user_at_ban,
+    send_question_email,
+    send_question_tg,
+)
+from core.settings import bot_logger
+from core.validators import email_validate, fullname_validate, phone_validate
 
 
 async def conv_start(

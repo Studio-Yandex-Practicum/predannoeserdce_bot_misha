@@ -6,16 +6,16 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
-import keyboards as kb
-from constants import SERVER_API_CUSTOMER_URL
-from message_config import ConversationLogMessage, SubscribeTextMessage
-from requests_db import delete_subscriber, get_headers
-from services import (
+import core.keyboards as kb
+from core.constants import SERVER_API_CUSTOMER_URL
+from core.message_config import ConversationLogMessage, SubscribeTextMessage
+from core.requests_db import delete_subscriber, get_headers
+from core.services import (
     format_error_messages,
     format_user_data_to_msg,
     get_data_to_send,
 )
-from settings import bot_logger
+from core.settings import bot_logger
 
 
 async def subscribe(
