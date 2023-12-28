@@ -14,6 +14,7 @@ import keyboards as kb
 from apscher import scheduller_initial
 from constants import (
     LINK_BUTTONS,
+    MASCOT_FILENAME,
     START_SLEEP,
     TELEGRAM_TOKEN,
     MainCallbacks,
@@ -44,11 +45,13 @@ from requests_db import get_token
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Отвечает пользователю на команду /start."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=MainMessage.START,
-        reply_markup=await kb.remove_menu(),
-    )
+    with open(file=MASCOT_FILENAME, mode="rb") as photo:
+        await context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=photo,
+            caption=MainMessage.START,
+            reply_markup=await kb.remove_menu(),
+        )
     await handle_show_main_menu(
         update=update, context=context, delay=START_SLEEP
     )

@@ -126,6 +126,7 @@ class AdminWorkTime:
     TIMEZONE = "Europe/Moscow"
 
 
+# Отложенные сообщения для администратора
 class DelayedQuestionsAttr:
     FILENAME = "delayed_qstns.txt"
     ENCODING = "utf8"
@@ -135,3 +136,7 @@ class DelayedQuestionsAttr:
 class DelayedQuestionsSendDelay:
     MINIMUM = 2
     MAXIMUM = 7
+
+
+# Изображение кота Фуражкина
+MASCOT_FILENAME = "assets/bgfooter_kot.png"
