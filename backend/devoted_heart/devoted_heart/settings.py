@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'app',
     'api',
     'drf_yasg',
+    'django_cleanup',
 ]
 
 MIDDLEWARE = [

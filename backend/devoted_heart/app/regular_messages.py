@@ -165,20 +165,41 @@ def get_chat_ids():
 
 
 def send_messages(selected_messages=None):
-    """Отправка разового сообщения"""
+    """
+    Отправка сообщения.
+    Можно отправить несколько сообщений из созданного списка.
+    Реализована проверка наличия сообщения/изображения.
+    Для TelegramAPI yнеобходимо отправить файл, а не ссылку на директорию.
+    Для отправки открываем файл,
+    читаем его содержимое и передаем его в Telegram API.
+    """
     chat_ids = get_chat_ids()
-    for chat_id in chat_ids:
-        try:
-            if selected_messages:
-                for message_text in selected_messages:
-                    bot.send_message(chat_id, message_text.text)
-                    if message_text.image:
-                        bot.send_photo(chat_id, message_text.image)
-        except Exception as e:
-            logger.error(
-                f"Ошибка с отправкой сообщений на chat ID {chat_id}: {e}"
-            )
-        time.sleep(max(SLEEP_BETWEEN, 0.1))
+
+    for message_text in selected_messages:
+        text = message_text.text
+        image_path = message_text.image.path if message_text.image else None
+
+        if text:
+            for chat_id in chat_ids:
+                try:
+                    bot.send_message(chat_id, text)
+                except Exception as e:
+                    logger.error(
+                        f"Ошибка с отправкой текста на chat ID {chat_id}: {e}"
+                    )
+                time.sleep(max(SLEEP_BETWEEN, 0.1))
+        if image_path and os.path.exists(image_path):
+            for chat_id in chat_ids:
+                try:
+                    with open(image_path, 'rb') as photo:
+                        bot.send_photo(chat_id, photo)
+                except Exception as e:
+                    logger.error(
+                        f"Ошибка с отправкой image на chat ID {chat_id}: {e}"
+                    )
+                time.sleep(max(SLEEP_BETWEEN, 0.1))
+        else:
+            logger.warning("Изображение не найдено или имеет нулевой размер.")
 
 
 def send_schedular_messages(selected_messages=None):

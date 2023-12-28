@@ -4,9 +4,11 @@ from django.contrib.admin.actions import delete_selected
 from django_object_actions import DjangoObjectActions
 from django.shortcuts import render
 from django.urls import path
+from django.utils.html import format_html
 from import_export import resources
 from import_export.admin import ImportExportActionModelAdmin
 from rangefilter.filters import DateRangeFilterBuilder
+
 from app.forms import MessagesForm
 from app.models import Customer, FAQ, Messages, Category
 from core.constants import EMPTY_FIELD_VALUE
@@ -61,7 +63,7 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
     дополнительно к рассылаемым random сообщениям из regular_messages.
     Например: Привет от Фуражкина!!!
     """
-    list_display = ('text', 'image', 'selected')
+    list_display = ('text', 'display_image', 'selected',)
     form = MessagesForm
     list_editable = ('selected',)
     actions = [
@@ -88,9 +90,20 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
         ]
         return custom_urls + urls
 
+    def display_image(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="height: 50px; width: auto"/>',
+                obj.image.url
+            )
+        return 'Отсутствует'
+    display_image.short_description = 'Фото'
+    # display_image.allow_tags = True
+    display_image.admin_order_field = 'image'
+
     def send_messages_view(self, request, queryset=None):
         """Отправка одного сообщения"""
-        selected_messages = list(queryset) if queryset else None
+        selected_messages = list(queryset) if queryset else []  # None
         try:
             send_messages(selected_messages)
             self.message_user(
