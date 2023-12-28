@@ -125,10 +125,3 @@ async def handle_faq_callback(
         await handle_category_button(update, context)
     else:
         await handle_faq_button(update, context)
-    # elif callback != MainCallbacks.CUSTOM_QUESTION:
-    #     return await handle_faq_button(update=update, context=context)
-    # else:
-    #     await query.edit_message_text(
-    #         text=ConversationTextMessage.COMMUNICATION_WAY,
-    #         reply_markup=await kb.get_communication_way(),
-    #     )

@@ -27,6 +27,7 @@ from handlers.basic import (
     handle_show_main_menu,
     handle_text_message,
     handle_url_button,
+    handle_custom_question_button,
 )
 from handlers.conv_data_collection import (
     data_collect_handler,
@@ -80,6 +81,17 @@ def main() -> None:
                 )
             ),
             callback=handle_faq_button,
+        ),
+        MessageHandler(
+            filters=(
+                filters.Regex(
+                    pattern=re.compile(
+                        pattern=rf"{MenuFuncButton.CUSTOM_QUESTION.value}",
+                        flags=re.IGNORECASE,
+                    )
+                )
+            ),
+            callback=handle_custom_question_button,
         ),
         MessageHandler(
             filters=(

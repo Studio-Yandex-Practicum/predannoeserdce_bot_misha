@@ -45,10 +45,11 @@ async def get_cancel_button() -> ReplyKeyboardMarkup:
 async def get_main_menu(user_id) -> ReplyKeyboardMarkup:
     """Создает клавиатуру основного меню."""
     keyboard = []
+    main_btn_list = list(MenuFuncButton)
     if check_subscribe(user_id=user_id).status_code != HTTPStatus.OK:
-        main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.SUBSCRIBE])
+        main_btn_list.remove(MenuFuncButton.UNSUBSCRIBE)
     else:
-        main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.UNSUBSCRIBE])
+        main_btn_list.remove(MenuFuncButton.SUBSCRIBE)
     btn_list = main_btn_list + list(LINK_BUTTONS.keys())
     btn_idx = 0
     while btn_idx < len(btn_list):

@@ -106,3 +106,14 @@ async def handle_error_callback(
     await handle_show_main_menu(
         update=update, context=context, delay=MENU_SLEEP
     )
+
+
+async def handle_custom_question_button(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Обрабатывает кнопку `Задать вопрос`."""
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=ConversationTextMessage.COMMUNICATION_WAY,
+        reply_markup=await kb.get_communication_way(),
+    )

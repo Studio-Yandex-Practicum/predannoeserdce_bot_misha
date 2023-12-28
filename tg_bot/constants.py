@@ -18,6 +18,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 # Функциональные кнопки меню
 class MenuFuncButton(str, Enum):
     FAQ = "частые вопросы"
+    CUSTOM_QUESTION = "задать вопрос"
     SUBSCRIBE = "подписаться на рассылку"
     UNSUBSCRIBE = "отписаться от рассылки"
 
@@ -91,7 +92,6 @@ class PaginationCallback:
 
 
 class MainCallbacks:
-    CUSTOM_QUESTION = "custom_question"
     TG_QUESTION = "tg_question"
     EMAIL_QUESTION = "email_question"
     BACK_TO_CATEGORIES = "back_to_categories"
