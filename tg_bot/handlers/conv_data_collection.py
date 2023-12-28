@@ -160,7 +160,7 @@ async def conv_get_question(
         context.user_data[
             "entry_text"
         ] = InlineButtonText.CUSTOM_QUESTION.lower()
-        if check_user_at_ban(user_id=query.from_user.id):
+        if await check_user_at_ban(user_id=query.from_user.id):
             return await handle_user_at_ban(update=update, context=context)
         await context.bot.send_message(
             chat_id=query.from_user.id, text=text, reply_markup=reply_markup

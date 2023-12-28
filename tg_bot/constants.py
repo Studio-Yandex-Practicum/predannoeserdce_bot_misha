@@ -44,7 +44,7 @@ FAQ_PER_PAGE = 5
 # Отдельные кнопки
 class OneButtonItems:
     MENU = "главное меню"
-    CANCEL = "назад в меню"
+    CANCEL = "⬅️ назад в меню"
     RETURN = "попробовать еще раз"
 
 
@@ -94,6 +94,7 @@ class MainCallbacks:
     CUSTOM_QUESTION = "custom_question"
     TG_QUESTION = "tg_question"
     EMAIL_QUESTION = "email_question"
+    BACK_TO_CATEGORIES = "back_to_categories"
     BACK_TO_FAQ = "back_to_faq"
     SERVER_ERROR = "server_error"
     USER_TO_BAN = "user_to_ban"

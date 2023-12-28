@@ -18,31 +18,46 @@ from settings import bot_logger
 
 def get_faq() -> dict[str | int, str]:
     """Получение из БД списка частых вопросов и ответов."""
-    url = SERVER_API_FAQ_URL
+    # url = SERVER_API_FAQ_URL
+    # results = {}
+    # while True:
+    #     try:
+    #         response: Response = requests.get(url=url)
+    #     except Exception as error:
+    #         bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % error)
+    #     if response.status_code != HTTPStatus.OK:
+    #         bot_logger.error(
+    #             msg=BotLogMessage.SERVER_ERROR % (response.status_code,)
+    #         )
+    #         results.update(
+    #             {
+    #                 MainCallbacks.SERVER_ERROR: {
+    #                     "question": MainMessage.SERVER_ERROR,
+    #                 }
+    #             }
+    #         )
+    #         return results
+    #     data = response.json()
+    #     results.update(data["results"])
+    #     if not data["next"]:
+    #         break
+    #     url = data["next"]
+    # bot_logger.info(msg=BotLogMessage.UPDATE_FAQ_DICT)
+    # return results
     results = {}
-    while True:
-        try:
-            response: Response = requests.get(url=url)
-        except Exception as error:
-            bot_logger.error(msg=BotLogMessage.UNKNOWN_ERROR % error)
-        if response.status_code != HTTPStatus.OK:
-            bot_logger.error(
-                msg=BotLogMessage.SERVER_ERROR % (response.status_code,)
-            )
-            results.update(
+    for i in range(15):
+        questions = {}
+        for j in range(15):
+            questions.update(
                 {
-                    MainCallbacks.SERVER_ERROR: {
-                        "question": MainMessage.SERVER_ERROR,
+                    str(j + 1): {
+                        "question": f"Вопрос №{j+1}",
+                        "answer": f"Ответ на вопрос №{j+1}",
+                        "order": f"{j+1*10}",
                     }
                 }
             )
-            return results
-        data = response.json()
-        results.update(data["results"])
-        if not data["next"]:
-            break
-        url = data["next"]
-    bot_logger.info(msg=BotLogMessage.UPDATE_FAQ_DICT)
+        results.update({f"Категория №{i+1}": questions})
     return results
 
 
