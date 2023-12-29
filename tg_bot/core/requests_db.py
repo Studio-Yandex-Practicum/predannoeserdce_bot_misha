@@ -4,16 +4,15 @@ from http import HTTPStatus
 import requests
 from requests import Response
 
-from constants import (
+from core.constants import (
     ADMIN_LOGIN,
     ADMIN_PASSWORD,
     SERVER_API_CUSTOMER_URL,
     SERVER_API_FAQ_URL,
     SERVER_API_TOKEN_URL,
-    MainCallbacks,
 )
-from message_config import BotLogMessage, MainMessage
-from settings import bot_logger
+from core.message_config import BotLogMessage, MainMessage
+from core.settings import bot_logger
 
 
 def get_faq() -> dict[str | int, str]:
@@ -29,13 +28,7 @@ def get_faq() -> dict[str | int, str]:
             bot_logger.error(
                 msg=BotLogMessage.SERVER_ERROR % (response.status_code,)
             )
-            results.update(
-                {
-                    MainCallbacks.SERVER_ERROR: {
-                        "question": MainMessage.SERVER_ERROR,
-                    }
-                }
-            )
+            results.update({MainMessage.SERVER_ERROR: ""})
             return results
         data = response.json()
         results.update(data["results"])

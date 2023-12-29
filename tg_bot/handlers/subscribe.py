@@ -6,16 +6,16 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler
 
-import keyboards as kb
-from constants import SERVER_API_CUSTOMER_URL
-from message_config import ConversationLogMessage, SubscribeTextMessage
-from requests_db import delete_subscriber, get_headers
-from services import (
+import core.keyboards as kb
+from core.constants import SERVER_API_CUSTOMER_URL
+from core.message_config import ConversationLogMessage, SubscribeTextMessage
+from core.requests_db import delete_subscriber, get_headers
+from core.services import (
     format_error_messages,
     format_user_data_to_msg,
     get_data_to_send,
 )
-from settings import bot_logger
+from core.settings import bot_logger
 
 
 async def subscribe(
@@ -25,7 +25,7 @@ async def subscribe(
     token = os.getenv(key="ADMIN_TOKEN")
     response = requests.post(
         url=SERVER_API_CUSTOMER_URL,
-        json=get_data_to_send(user_data=user_data),
+        json=await get_data_to_send(user_data=user_data),
         headers=get_headers(token=token),
     )
     if response.status_code == HTTPStatus.CREATED:
@@ -34,11 +34,11 @@ async def subscribe(
         )
         text = (
             f"{SubscribeTextMessage.DONE}"
-            f"{format_user_data_to_msg(user_data=user_data)}"
+            f"{await format_user_data_to_msg(user_data=user_data)}"
         )
         keyboard = await kb.get_menu_button()
     else:
-        error = format_error_messages(text=response.text)
+        error = await format_error_messages(text=response.text)
         bot_logger.error(
             msg=ConversationLogMessage.SUBSCRIBE_ERROR
             % (error, user_data["user_id"])
@@ -62,7 +62,7 @@ async def unsubscribe(
         text = SubscribeTextMessage.UNSUBSCRIBE
         bot_logger.info(msg=ConversationLogMessage.UNSUSCRIBE_SUCCESS % id)
     else:
-        error = format_error_messages(text=response.text)
+        error = await format_error_messages(text=response.text)
         text = f"{SubscribeTextMessage.ERROR}{error}"
         bot_logger.error(
             msg=ConversationLogMessage.UNSUBSCRIBE_ERROR

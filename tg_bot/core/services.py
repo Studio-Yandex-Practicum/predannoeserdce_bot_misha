@@ -4,28 +4,28 @@ import random
 from datetime import datetime, time
 
 import pytz
-from telegram import Update
+from telegram import InlineKeyboardButton, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-import keyboards as kb
-from constants import (
+import core.keyboards as kb
+from core.constants import (
     ADMIN_CHAT_ID,
     FAQ_PER_PAGE,
     AdminWorkTime,
     BanList,
     DelayedQuestionsAttr,
     DelayedQuestionsSendDelay,
-    MainCallbacks,
+    PaginationCallback,
 )
-from message_config import (
+from core.message_config import (
     BotLogMessage,
     ConversationLogMessage,
     DelayedQstnsLogMessage,
     DelayedQstnsTextMessage,
     InlineButtonText,
 )
-from settings import bot_logger
+from core.settings import bot_logger
 
 
 async def check_work_time() -> bool:
@@ -81,26 +81,54 @@ async def send_question_email(
     bot_logger.info(msg=ConversationLogMessage.SEND_QUESTION % data["user_id"])
 
 
-async def faq_pages_count(faq_dict: dict) -> int:
-    """Возвращает количество страниц с вопросами."""
-    return (
-        len(await faq_buttons(faq_dict=faq_dict)) + FAQ_PER_PAGE - 1
-    ) // FAQ_PER_PAGE
+async def get_pages_count(queryset: list) -> int:
+    """Возвращает количество страниц с категориями или вопросами."""
+    return (len(queryset) + FAQ_PER_PAGE - 1) // FAQ_PER_PAGE
 
 
-async def faq_buttons(faq_dict) -> dict:
-    """Добавляет к кнопкам с вопросами кнопку с кастомным вопросом."""
-    faq_dict.update(
-        {
-            MainCallbacks.CUSTOM_QUESTION: {
-                "question": InlineButtonText.CUSTOM_QUESTION,
-            }
-        }
-    )
-    return faq_dict
+async def get_navigation_buttons(pages_count: int, page: int) -> list:
+    """Возвращает список кнопок пагинации."""
+    navigation_buttons = []
+    if page > 2:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.FIRST_PAGE,
+                callback_data=PaginationCallback.FIRST_PAGE,
+            )
+        )
+    if page > 1:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.PREV_PAGE,
+                callback_data=PaginationCallback.PREV_PAGE,
+            )
+        )
+    if page < pages_count:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.NEXT_PAGE,
+                callback_data=PaginationCallback.NEXT_PAGE,
+            )
+        )
+    if page < pages_count - 1:
+        navigation_buttons.append(
+            InlineKeyboardButton(
+                text=InlineButtonText.LAST_PAGE,
+                callback_data=PaginationCallback.LAST_PAGE,
+            )
+        )
+    return navigation_buttons
 
 
-def format_user_data_to_msg(user_data: dict[str, str]) -> str:
+async def get_page_list(queryset: list, page: int) -> list:
+    """Возвращает срез списка сущностей текущей страницы пагинации."""
+    start_idx = (page - 1) * FAQ_PER_PAGE
+    end_idx = start_idx + FAQ_PER_PAGE
+    page_list = queryset[start_idx:end_idx]
+    return page_list
+
+
+async def format_user_data_to_msg(user_data: dict[str, str]) -> str:
     """Подготавливает данные к представлению пользователю."""
     text = {
         "Email": user_data["user_email"],
@@ -110,7 +138,7 @@ def format_user_data_to_msg(user_data: dict[str, str]) -> str:
     return "\n".join(f"{key} - {value}" for key, value in text.items())
 
 
-def format_error_messages(text) -> str:
+async def format_error_messages(text) -> str:
     """Преобразует словарь ошибок в строку."""
     errors = json.loads(text)
     error_messages = []
@@ -120,7 +148,7 @@ def format_error_messages(text) -> str:
     return "\n".join(error_messages)
 
 
-def get_data_to_send(user_data: dict[str, str]) -> dict[str, str]:
+async def get_data_to_send(user_data: dict[str, str]) -> dict[str, str]:
     """Подготавливает данные к отправке в БД."""
     return {
         "email": user_data["user_email"],
@@ -130,7 +158,7 @@ def get_data_to_send(user_data: dict[str, str]) -> dict[str, str]:
     }
 
 
-def check_user_at_ban(user_id: int) -> bool:
+async def check_user_at_ban(user_id: int) -> bool:
     """Проверяет пользователя на нахождение в чёрном списке."""
     with open(
         file=BanList.FILENAME, mode="r", encoding=BanList.ENCODING

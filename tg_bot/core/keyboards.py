@@ -8,20 +8,27 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 
-from constants import (
-    FAQ_PER_PAGE,
+from core.constants import (
     LINK_BUTTONS,
     MENU_LAYOUT,
     MainCallbacks,
     MenuFuncButton,
     OneButtonItems,
-    PaginationCallback,
 )
-from message_config import BotLogMessage, InlineButtonText, PlaceholderMessage
-from requests_db import check_subscribe
-from services import faq_buttons, faq_pages_count
-from settings import bot_logger
-from utils import LinkButtonAttributes
+from core.message_config import (
+    BotLogMessage,
+    InlineButtonText,
+    MainMessage,
+    PlaceholderMessage,
+)
+from core.requests_db import check_subscribe
+from core.services import (
+    get_navigation_buttons,
+    get_page_list,
+    get_pages_count,
+)
+from core.settings import bot_logger
+from core.utils import LinkButtonAttributes
 
 
 async def get_menu_button() -> ReplyKeyboardMarkup:
@@ -45,10 +52,11 @@ async def get_cancel_button() -> ReplyKeyboardMarkup:
 async def get_main_menu(user_id) -> ReplyKeyboardMarkup:
     """Создает клавиатуру основного меню."""
     keyboard = []
+    main_btn_list = list(MenuFuncButton)
     if check_subscribe(user_id=user_id).status_code != HTTPStatus.OK:
-        main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.SUBSCRIBE])
+        main_btn_list.remove(MenuFuncButton.UNSUBSCRIBE)
     else:
-        main_btn_list = list([MenuFuncButton.FAQ, MenuFuncButton.UNSUBSCRIBE])
+        main_btn_list.remove(MenuFuncButton.SUBSCRIBE)
     btn_list = main_btn_list + list(LINK_BUTTONS.keys())
     btn_idx = 0
     while btn_idx < len(btn_list):
@@ -85,56 +93,66 @@ async def get_url_button(
     )
 
 
+async def get_categories_menu(
+    categories: list, page: int
+) -> InlineKeyboardMarkup:
+    """Создает клавиатуру с категориями вопросов."""
+    pages_count = await get_pages_count(queryset=categories)
+    page_list = await get_page_list(queryset=categories, page=page)
+    if page_list[0] == MainMessage.SERVER_ERROR:
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text=MainMessage.SERVER_ERROR,
+                    callback_data=MainCallbacks.SERVER_ERROR,
+                )
+            ]
+        ]
+    else:
+        keyboard = [
+            [InlineKeyboardButton(text=item, callback_data=item)]
+            for item in page_list
+        ]
+    bot_logger.info(msg=BotLogMessage.CREATE_CATEGORY_KB % page)
+    if pages_count != 1:
+        navigation_buttons = await get_navigation_buttons(
+            pages_count=pages_count, page=page
+        )
+        keyboard.append(navigation_buttons)
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
 async def get_faq_menu(faq_questions: list, page: int) -> InlineKeyboardMarkup:
-    """Создает клавиатуру с частыми вопросами."""
-    buttons = await faq_buttons(faq_dict=faq_questions)
-    pages_count = await faq_pages_count(faq_dict=faq_questions)
-    start_idx = (page - 1) * FAQ_PER_PAGE
-    end_idx = start_idx + FAQ_PER_PAGE
-    page_faq = list(buttons.items())[start_idx:end_idx]
-    keyboard = [
+    """Создает клавиатуру с частыми вопросами в текущей категории."""
+    pages_count = await get_pages_count(queryset=faq_questions)
+    page_list = await get_page_list(queryset=faq_questions, page=page)
+    keyboard = []
+    for item in page_list:
+        item_key = list(item.keys())[0]
+        item_value = list(item.values())[0]
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=item_value["question"],
+                    callback_data=item_key,
+                )
+            ]
+        )
+
+    keyboard.append(
         [
             InlineKeyboardButton(
-                text=item[-1]["question"], callback_data=item[0]
+                text=InlineButtonText.BACK_TO_CATEGORIES,
+                callback_data=MainCallbacks.BACK_TO_CATEGORIES,
             )
         ]
-        for item in page_faq
-    ]
-    if pages_count == 1:
-        bot_logger.info(msg=BotLogMessage.CREATE_FAQ_KB % page)
-        return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-    navigation_buttons = []
-    if page > 2:
-        navigation_buttons.append(
-            InlineKeyboardButton(
-                text=InlineButtonText.FIRST_PAGE,
-                callback_data=PaginationCallback.FIRST_PAGE,
-            )
-        )
-    if page > 1:
-        navigation_buttons.append(
-            InlineKeyboardButton(
-                text=InlineButtonText.PREV_PAGE,
-                callback_data=PaginationCallback.PREV_PAGE,
-            )
-        )
-    if page < pages_count:
-        navigation_buttons.append(
-            InlineKeyboardButton(
-                text=InlineButtonText.NEXT_PAGE,
-                callback_data=PaginationCallback.NEXT_PAGE,
-            )
-        )
-    if page < pages_count - 1:
-        navigation_buttons.append(
-            InlineKeyboardButton(
-                text=InlineButtonText.LAST_PAGE,
-                callback_data=PaginationCallback.LAST_PAGE,
-            )
-        )
-    keyboard.append(navigation_buttons)
+    )
     bot_logger.info(msg=BotLogMessage.CREATE_FAQ_KB % page)
+    if pages_count != 1:
+        navigation_buttons = await get_navigation_buttons(
+            pages_count=pages_count, page=page
+        )
+        keyboard.append(navigation_buttons)
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 

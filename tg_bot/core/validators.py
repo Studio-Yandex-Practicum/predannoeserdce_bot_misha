@@ -3,7 +3,7 @@ import re
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from constants import RegexText
+from core.constants import RegexText
 
 
 async def fullname_validate(

@@ -4,7 +4,7 @@ from enum import Enum
 
 from dotenv import load_dotenv
 
-from utils import LinkButtonAttributes
+from core.utils import LinkButtonAttributes
 
 load_dotenv()
 
@@ -18,6 +18,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 # Функциональные кнопки меню
 class MenuFuncButton(str, Enum):
     FAQ = "частые вопросы"
+    CUSTOM_QUESTION = "задать вопрос"
     SUBSCRIBE = "подписаться на рассылку"
     UNSUBSCRIBE = "отписаться от рассылки"
 
@@ -44,7 +45,7 @@ FAQ_PER_PAGE = 5
 # Отдельные кнопки
 class OneButtonItems:
     MENU = "главное меню"
-    CANCEL = "назад в меню"
+    CANCEL = "⬅️ назад в меню"
     RETURN = "попробовать еще раз"
 
 
@@ -91,9 +92,9 @@ class PaginationCallback:
 
 
 class MainCallbacks:
-    CUSTOM_QUESTION = "custom_question"
     TG_QUESTION = "tg_question"
     EMAIL_QUESTION = "email_question"
+    BACK_TO_CATEGORIES = "back_to_categories"
     BACK_TO_FAQ = "back_to_faq"
     SERVER_ERROR = "server_error"
     USER_TO_BAN = "user_to_ban"
@@ -125,6 +126,7 @@ class AdminWorkTime:
     TIMEZONE = "Europe/Moscow"
 
 
+# Отложенные сообщения для администратора
 class DelayedQuestionsAttr:
     FILENAME = "delayed_qstns.txt"
     ENCODING = "utf8"
@@ -134,3 +136,7 @@ class DelayedQuestionsAttr:
 class DelayedQuestionsSendDelay:
     MINIMUM = 2
     MAXIMUM = 7
+
+
+# Изображение кота Фуражкина
+MASCOT_FILENAME = "assets/bgfooter_kot.png"

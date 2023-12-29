@@ -10,10 +10,11 @@ from telegram.ext import (
     filters,
 )
 
-import keyboards as kb
-from apscher import scheduller_initial
-from constants import (
+import core.keyboards as kb
+from core.apscher import scheduller_initial
+from core.constants import (
     LINK_BUTTONS,
+    MASCOT_FILENAME,
     START_SLEEP,
     TELEGRAM_TOKEN,
     MainCallbacks,
@@ -26,24 +27,32 @@ from handlers.basic import (
     handle_show_main_menu,
     handle_text_message,
     handle_url_button,
+    handle_custom_question_button,
 )
 from handlers.conv_data_collection import (
     data_collect_handler,
     tg_question_handler,
 )
-from handlers.faq import handle_faq_button, handle_faq_callback, update_faq
+from handlers.faq import (
+    handle_category_button,
+    handle_faq_button,
+    handle_faq_callback,
+    update_faq,
+)
 from handlers.subscribe import unsubscribe
-from message_config import MainMessage
-from requests_db import get_token
+from core.message_config import MainMessage
+from core.requests_db import get_token
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Отвечает пользователю на команду /start."""
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=MainMessage.START,
-        reply_markup=await kb.remove_menu(),
-    )
+    with open(file=MASCOT_FILENAME, mode="rb") as photo:
+        await context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=photo,
+            caption=MainMessage.START,
+            reply_markup=await kb.remove_menu(),
+        )
     await handle_show_main_menu(
         update=update, context=context, delay=START_SLEEP
     )
@@ -77,6 +86,17 @@ def main() -> None:
             filters=(
                 filters.Regex(
                     pattern=re.compile(
+                        pattern=rf"{MenuFuncButton.CUSTOM_QUESTION.value}",
+                        flags=re.IGNORECASE,
+                    )
+                )
+            ),
+            callback=handle_custom_question_button,
+        ),
+        MessageHandler(
+            filters=(
+                filters.Regex(
+                    pattern=re.compile(
                         pattern=rf"{MenuFuncButton.UNSUBSCRIBE.value}",
                         flags=re.IGNORECASE,
                     )
@@ -104,6 +124,14 @@ def main() -> None:
         ),
         CallbackQueryHandler(
             callback=handle_to_ban, pattern=MainCallbacks.USER_TO_BAN
+        ),
+        CallbackQueryHandler(
+            callback=handle_faq_button,
+            pattern=MainCallbacks.BACK_TO_CATEGORIES,
+        ),
+        CallbackQueryHandler(
+            callback=handle_category_button,
+            pattern=MainCallbacks.BACK_TO_FAQ,
         ),
         CallbackQueryHandler(callback=handle_faq_callback),
         MessageHandler(
