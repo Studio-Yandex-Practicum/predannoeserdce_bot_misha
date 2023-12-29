@@ -6,8 +6,8 @@ from django.core.validators import (
 from sys import getsizeof
 
 from .models import Messages
+from core.constants import LIMIT_VALUE_TEXT
 
-LIMIT_VALUE_TEXT = 2046
 LIMIT_VALUE_IMAGE = 1 * 1024 * 1024  # 1MB
 FILE_EXTENSION_LIST = ['jpg', 'jpeg', 'png']
 MESSAGE_TEXT = 'Длинное сообщение'

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from requests.exceptions import RequestException
 from telegram.error import InvalidToken
 
-from app.models import Customer, Messages
+from app.models import Customer, Messages, SchedulerSettings
 
 
 load_dotenv()
@@ -28,7 +28,6 @@ URLD = 'https://api.thedogapi.com/v1/images/search'
 URLC = 'https://api.thecatapi.com/v1/images/search'
 URLTEXT = 'https://api.forismatic.com/api/1.0/?method=getQuote&format=jsonp&jsonp=parseQuote'  # noqa
 SLEEP_BETWEEN = 0.4
-SCHEDULER_PERIOD = 60
 CHOICES = [1, 2, 3, 4]
 
 
@@ -55,10 +54,12 @@ def start_scheduler():
         logger.error(f"Ошибка при остановке планировщика: {e}")
 
     scheduler = BackgroundScheduler()
-
+    scheduler_timing = SchedulerSettings.objects.first().scheduler_period
     scheduler.add_job(
-        send_schedular_messages, 'interval',
-        seconds=SCHEDULER_PERIOD, id='send_messages_job'
+        send_schedular_messages,
+        'interval',
+        seconds=scheduler_timing,
+        id='send_messages_job'
     )
     scheduler.start()
 
