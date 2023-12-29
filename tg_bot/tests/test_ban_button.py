@@ -1,11 +1,10 @@
 import pytest
-
-from keyboards import get_to_ban_button
+from core.keyboards import get_to_ban_button
 from telegram import InlineKeyboardMarkup
 
 test_keyboard = {
-    'text' : 'Заблокировать пользователя',
-    'callback_data' : 'user_to_ban',
+    "text": "Заблокировать пользователя",
+    "callback_data": "user_to_ban",
 }
 
 
@@ -17,5 +16,5 @@ async def test_ban_kb():
     button = keyboards.inline_keyboard[0][0]
 
     assert type(keyboards) == InlineKeyboardMarkup
-    assert button['text'] == test_keyboard['text']
-    assert button['callback_data'] == test_keyboard['callback_data']
+    assert button["text"] == test_keyboard["text"]
+    assert button["callback_data"] == test_keyboard["callback_data"]

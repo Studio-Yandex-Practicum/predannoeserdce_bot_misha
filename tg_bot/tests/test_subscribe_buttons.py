@@ -1,14 +1,17 @@
 import pytest
-
-from keyboards import get_subscribe_buttons
+from core.keyboards import get_subscribe_buttons
 from telegram import ReplyKeyboardMarkup
 
 test_keyboard = [
-    ['Попробовать еще раз',],
-    ['ГЛАВНОЕ МЕНЮ',],
+    [
+        "Попробовать еще раз",
+    ],
+    [
+        "ГЛАВНОЕ МЕНЮ",
+    ],
 ]
 
-test_user_id = '123'
+test_user_id = "123"
 
 
 @pytest.mark.asyncio
@@ -20,7 +23,7 @@ async def test_main_menu_keyboard():
     buttons = keyboards.keyboard
     for buttons_row in buttons:
         for button in buttons_row:
-            text_row.append(button['text'])
+            text_row.append(button["text"])
         text.append(text_row)
         text_row = []
 
@@ -29,5 +32,5 @@ async def test_main_menu_keyboard():
 
     for i in range(len(test_keyboard) - 1):
         assert len(buttons[i]) == len(test_keyboard[i])
-        
+
     assert text == test_keyboard
