@@ -1,13 +1,11 @@
 import pytest
-
-from keyboards import get_url_button
+from core.keyboards import get_url_button
+from core.utils import LinkButtonAttributes
 from telegram import InlineKeyboardMarkup
-from utils import LinkButtonAttributes
 
 test_keyboard = LinkButtonAttributes(
-    text='Нажми на меня',
-    url= 'https://www.google.com/'
-    )
+    text="Нажми на меня", url="https://www.google.com/"
+)
 
 
 @pytest.mark.asyncio
@@ -18,5 +16,5 @@ async def test_url_button():
     button = keyboards.inline_keyboard[0][0]
 
     assert type(keyboards) == InlineKeyboardMarkup
-    assert button['text'] == test_keyboard.text
-    assert button['url'] == test_keyboard.url
+    assert button["text"] == test_keyboard.text
+    assert button["url"] == test_keyboard.url

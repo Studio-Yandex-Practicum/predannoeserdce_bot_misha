@@ -1,12 +1,12 @@
 import pytest
-
-from keyboards import get_communication_way
+from core.keyboards import get_communication_way
 from telegram import InlineKeyboardMarkup
 
 test_keyboard = {
-    'text' : 'Telegram',
-    'callback_data' : 'tg_question',
+    "text": "Telegram",
+    "callback_data": "tg_question",
 }
+
 
 @pytest.mark.asyncio
 async def test_communication_kb():
@@ -16,5 +16,5 @@ async def test_communication_kb():
     button = keyboards.inline_keyboard[0][0]
 
     assert type(keyboards) == InlineKeyboardMarkup
-    assert button['text'] == test_keyboard['text']
-    assert button['callback_data'] == test_keyboard['callback_data']
+    assert button["text"] == test_keyboard["text"]
+    assert button["callback_data"] == test_keyboard["callback_data"]

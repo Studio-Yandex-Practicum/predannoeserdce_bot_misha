@@ -1,6 +1,5 @@
 import pytest
-
-from keyboards import remove_menu
+from core.keyboards import remove_menu
 from telegram import ReplyKeyboardRemove
 
 
@@ -8,5 +7,5 @@ from telegram import ReplyKeyboardRemove
 async def test_remove_keyboard():
     """Проверяем, что remove_menu, удаляет клавиатуру"""
 
-    keyboards =await remove_menu()
+    keyboards = await remove_menu()
     assert type(keyboards) == ReplyKeyboardRemove
