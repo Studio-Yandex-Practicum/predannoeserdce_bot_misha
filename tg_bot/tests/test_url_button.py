@@ -15,6 +15,6 @@ async def test_url_button():
     keyboards = await get_url_button(test_keyboard)
     button = keyboards.inline_keyboard[0][0]
 
-    assert type(keyboards) == InlineKeyboardMarkup
+    assert isinstance(keyboards, InlineKeyboardMarkup)
     assert button["text"] == test_keyboard.text
     assert button["url"] == test_keyboard.url

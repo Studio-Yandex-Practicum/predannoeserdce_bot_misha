@@ -18,6 +18,6 @@ async def test_menu_button():
         text.append(text_row)
         text_row = []
 
-    assert type(keyboards) == ReplyKeyboardMarkup
+    assert isinstance(keyboards, ReplyKeyboardMarkup)
     assert len(buttons) == len(test_keyboard)
     assert text == test_keyboard

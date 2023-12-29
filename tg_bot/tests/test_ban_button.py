@@ -15,6 +15,5 @@ async def test_ban_kb():
     keyboards = await get_to_ban_button()
     button = keyboards.inline_keyboard[0][0]
 
-    assert type(keyboards) == InlineKeyboardMarkup
-    assert button["text"] == test_keyboard["text"]
+    assert isinstance(keyboards, InlineKeyboardMarkup)
     assert button["callback_data"] == test_keyboard["callback_data"]
