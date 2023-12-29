@@ -1,0 +1,40 @@
+version: '3.3'
+
+volumes:
+  sql_database:
+  static:
+  media:
+  bot_logs:
+
+services:
+  backend:
+    build: ./backend/
+    env_file: .env
+    container_name: backend
+    volumes:
+      - sql_database:/backend/database/
+      - static:/backend_static/
+      - media:/media/
+    restart: always
+  bot:
+    build: ./tg_bot/
+    container_name: tg_bot
+    command: python main.py
+    volumes:
+      - bot_logs:/app/bot_logs/
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - backend
+  gateway:
+    build: ./gateway/
+    container_name: gateway
+    volumes:
+      - static:/staticfiles/
+      - media:/media/
+    depends_on:
+      - backend
+    ports:
+      - 8000:80
+    restart: always
