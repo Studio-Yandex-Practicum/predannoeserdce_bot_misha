@@ -8,4 +8,4 @@ async def test_remove_keyboard():
     """Проверяем, что remove_menu, удаляет клавиатуру"""
 
     keyboards = await remove_menu()
-    assert type(keyboards) == ReplyKeyboardRemove
+    assert isinstance(keyboards, ReplyKeyboardRemove)
