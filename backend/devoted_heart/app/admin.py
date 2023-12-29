@@ -10,7 +10,7 @@ from import_export.admin import ImportExportActionModelAdmin
 from rangefilter.filters import DateRangeFilterBuilder
 
 from app.forms import MessagesForm
-from app.models import Customer, FAQ, Messages, Category
+from app.models import Customer, FAQ, Messages, Category, SchedulerSettings
 from core.constants import EMPTY_FIELD_VALUE
 from app.regular_messages import send_messages, start_scheduler, stop_scheduler
 
@@ -150,6 +150,24 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
     stop_scheduler.label = 'Остановить планировщик'
 
 
+class SchedulerSettingsAdmin(admin.ModelAdmin):
+    """Админка для планирования рассылки"""
+    list_display = ('scheduler_period', )
+
+    def has_add_permission(self, request):
+        """
+        Проверка на наличие записи перед разрешением добавления новой записию
+        Страховка. Может быть только одна запись.
+        """
+        if self.model.objects.exists():
+            return False
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        """Запрет удаления записи. Страховка"""
+        return False
+
+
 delete_selected.short_description = 'Удалить выбранное'
 
 
@@ -157,6 +175,7 @@ admin.site.register(FAQ, FAQAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Messages, MessagesAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(SchedulerSettings, SchedulerSettingsAdmin)
 
 admin.site.site_header = 'Преданное сердце'
 admin.site.site_title = 'Преданное сердце'

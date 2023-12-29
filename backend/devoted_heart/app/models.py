@@ -1,4 +1,10 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
+
+from core.constants import (
+    MAX_SCHEDULER_MESSAGE, MAX_SCHEDULER_PERIOD, MIN_SCHEDULER_MESSAGE,
+    MIN_SCHEDULER_PERIOD, SCHEDULER_DEFAULT, LIMIT_VALUE_TEXT
+)
 
 
 class Category(models.Model):
@@ -113,7 +119,7 @@ class Messages(models.Model):
         null=True, blank=True
     )
     text = models.TextField(
-        max_length=4096,
+        max_length=LIMIT_VALUE_TEXT,
         null=True,
         blank=True,
         verbose_name='Текст сообщения от администратора',
@@ -137,3 +143,25 @@ class Messages(models.Model):
 
     def __str__(self):
         return f"{self.customer} - {self.timestamp}"
+
+
+class SchedulerSettings(models.Model):
+    """Модель планирования рассылки"""
+    scheduler_period = models.PositiveIntegerField(
+        default=SCHEDULER_DEFAULT,
+        validators=[
+            MaxValueValidator(
+                limit_value=MAX_SCHEDULER_PERIOD,
+                message=MAX_SCHEDULER_MESSAGE
+            ),
+            MinValueValidator(
+               limit_value=MIN_SCHEDULER_PERIOD,
+               message=MIN_SCHEDULER_MESSAGE
+            )
+        ],
+        verbose_name='Период рассылки, сек'
+    )
+
+    class Meta:
+        verbose_name = "Период рассылки"
+        verbose_name_plural = 'Периоды рассылки'
