@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from unittest.mock import patch
 from tempfile import NamedTemporaryFile
 
 
@@ -50,9 +51,13 @@ class MessagesAdminTest(TestCase):
                 text='Test Message', image=temp_image.name, selected=False
             )
 
-    def test_send_messages_view(self):
+    @patch('app.regular_messages.ThreadPoolExecutor')
+    def test_send_messages_view(self, mock_executor):
+        mock_executor.return_value.submit.return_value.result.return_value = None  # noqa
+        selected_messages = Messages.objects.create(  # noqa
+            text='Selected Message 1', selected=True
+        )
         self.client.login(username='admin', password='admin123')
-
         url = reverse('admin:send_messages')
         data = {
             'action': 'send_messages_view',
@@ -68,9 +73,12 @@ class MessagesAdminTest(TestCase):
             response.content
         )
 
-    def test_start_scheduler(self):
+    @patch('app.regular_messages.ThreadPoolExecutor')
+    @patch('app.models.SchedulerSettings.objects.first')
+    def test_start_scheduler(self, mock_settings, mock_executor):
         self.client.login(username='admin', password='admin123')
-
+        mock_settings.return_value.scheduler_period = 60
+        mock_executor.return_value.submit.return_value.result.return_value = None  # noqa
         url = reverse('admin:start_scheduler')
         data = {
             'action': 'start_scheduler',

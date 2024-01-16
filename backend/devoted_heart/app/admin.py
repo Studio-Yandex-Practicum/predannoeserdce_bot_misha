@@ -103,7 +103,20 @@ class MessagesAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     def send_messages_view(self, request, queryset=None):
         """Отправка одного сообщения"""
-        selected_messages = list(queryset) if queryset else []  # None
+        selected_messages = (
+            list(queryset) if queryset else Messages.objects.filter(
+                selected=True
+            )
+        )
+        if not selected_messages:
+            self.message_user(
+                request, (
+                    'Не выбрано сообщение. '
+                    'Выберите хотя бы одно сообщение - '
+                    'через чекбокс "добавить к планировщику"'
+                )
+            )
+            return render(request, 'admin/send_messages_done.html')
         try:
             send_messages(selected_messages)
             self.message_user(
@@ -156,7 +169,7 @@ class SchedulerSettingsAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         """
-        Проверка на наличие записи перед разрешением добавления новой записию
+        Проверка на наличие записи перед разрешением добавления новой записи.
         Страховка. Может быть только одна запись.
         """
         if self.model.objects.exists():

@@ -5,9 +5,10 @@ import random
 import requests
 import sys
 import telebot
-import time
+# import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 from requests.exceptions import RequestException
 from telegram.error import InvalidToken
 
@@ -165,61 +166,83 @@ def get_chat_ids():
         return []
 
 
+def send_message(chat_id, text):
+    """Отправка текстового сообщения."""
+    try:
+        bot.send_message(chat_id, text)
+    except Exception as e:
+        logger.error(f'Ошибка с отправкой текста на chat ID {chat_id}: {e}')
+
+
+def send_photo(chat_id, image_path):
+    """Отправка фото."""
+    try:
+        with open(image_path, 'rb') as photo:
+            bot.send_photo(chat_id, photo)
+    except Exception as e:
+        logger.error(
+            f'Ошибка с отправкой изображения на {chat_id}: {e}'
+        )
+
+
 def send_messages(selected_messages=None):
-    """
-    Отправка сообщения.
-    Можно отправить несколько сообщений из созданного списка.
-    Реализована проверка наличия сообщения/изображения.
-    Для TelegramAPI yнеобходимо отправить файл, а не ссылку на директорию.
-    Для отправки открываем файл,
-    читаем его содержимое и передаем его в Telegram API.
-    """
+    """Отправка разовых сообщений клиентам."""
     chat_ids = get_chat_ids()
+    executor = ThreadPoolExecutor(max_workers=len(chat_ids))
 
-    for message_text in selected_messages:
-        text = message_text.text
-        image_path = message_text.image.path if message_text.image else None
+    try:
+        if selected_messages is None:
+            logger.info('Не выбрано сообщение')
+            return None
 
-        if text:
+        futures = []
+
+        for message_text in selected_messages:
+            text = message_text.text
+            image_path = message_text.image.path if message_text.image else None  # noqa
+
             for chat_id in chat_ids:
-                try:
-                    bot.send_message(chat_id, text)
-                except Exception as e:
-                    logger.error(
-                        f"Ошибка с отправкой текста на chat ID {chat_id}: {e}"
+                if text:
+                    futures.append(
+                        executor.submit(send_message, chat_id, text)
                     )
-                time.sleep(max(SLEEP_BETWEEN, 0.1))
-        if image_path and os.path.exists(image_path):
-            for chat_id in chat_ids:
-                try:
-                    with open(image_path, 'rb') as photo:
-                        bot.send_photo(chat_id, photo)
-                except Exception as e:
-                    logger.error(
-                        f"Ошибка с отправкой image на chat ID {chat_id}: {e}"
+
+                if image_path and os.path.exists(image_path):
+                    futures.append(
+                        executor.submit(send_photo, chat_id, image_path)
                     )
-                time.sleep(max(SLEEP_BETWEEN, 0.1))
-        else:
-            logger.warning("Изображение не найдено или имеет нулевой размер.")
+
+        for future in futures:
+            future.result()
+    except Exception as e:
+        logger.error(f'Ошибка с отправкой сообщений: {e}')
+    finally:
+        executor.shutdown()
 
 
 def send_schedular_messages(selected_messages=None):
-    """
-    Планировщик регулярных сообщений с возможным текстом от администратора
-    """
+    """Отправка случайных сообщений по расписанию."""
     chat_ids = get_chat_ids()
-    selected_messages = Messages.objects.filter(
-        selected=True
-    )
-    for chat_id in chat_ids:
-        try:
+    selected_messages = Messages.objects.filter(selected=True)
+    executor = ThreadPoolExecutor(max_workers=len(chat_ids))
+
+    try:
+        futures = []
+
+        for chat_id in chat_ids:
             if selected_messages:
                 for message in selected_messages:
-                    send_regular_message(chat_id, message.text)
+                    futures.append(
+                        executor.submit(
+                            send_regular_message, chat_id, message.text
+                        )
+                    )
             else:
-                send_regular_message(chat_id)
-        except Exception as e:
-            logger.error(
-                f"Ошибка с отправкой сообщений на chat ID {chat_id}: {e}"
-            )
-        time.sleep(max(SLEEP_BETWEEN, 0.1))
+                futures.append(executor.submit(send_regular_message, chat_id))
+
+        for future in futures:
+            future.result()
+    except Exception as e:
+        logger.error(f'Ошибка с отправкой сообщений: {e}')
+    finally:
+        executor.shutdown()

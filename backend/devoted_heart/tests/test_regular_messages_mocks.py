@@ -1,8 +1,8 @@
 import unittest
 from django.test import TestCase
-from unittest.mock import patch, call
+from unittest.mock import patch, call, mock_open
 from app.regular_messages import (
-    send_regular_message, send_messages, send_schedular_messages
+    send_regular_message, send_messages, send_photo, send_schedular_messages
 )
 from app.models import Messages
 
@@ -97,6 +97,40 @@ class RegularMessagesTestCase(TestCase):
             [call(321, 'Selected Message 1'), call(321, 'Random Text')]
         )
         mock_send_message.assert_has_calls(calls)
+
+    @patch('app.regular_messages.bot')
+    def test_send_photo_success(self, mock_bot):
+        chat_id = 123
+        image_path = 'test.jpg'
+        open_mock = mock_open()
+
+        with patch('builtins.open', open_mock):
+            send_photo(chat_id, image_path)
+
+        open_mock.assert_called_once_with(image_path, 'rb')
+        mock_bot.send_photo.assert_called_once_with(
+            chat_id, open_mock.return_value
+        )
+
+    @patch('app.regular_messages.bot')
+    @patch('app.regular_messages.logger')
+    def test_send_photo_failure(self, mock_logger, mock_bot):
+        chat_id = 123
+        image_path = 'test.jpg'
+        open_mock = mock_open()
+        exception_message = 'Some error'
+
+        with patch('builtins.open', open_mock):
+            mock_bot.send_photo.side_effect = Exception(exception_message)
+            send_photo(chat_id, image_path)
+
+        open_mock.assert_called_once_with(image_path, 'rb')
+        mock_bot.send_photo.assert_called_once_with(
+            chat_id, open_mock.return_value
+        )
+        mock_logger.error.assert_called_once_with(
+            f'Ошибка с отправкой изображения на {chat_id}: {exception_message}'
+        )
 
 
 if __name__ == '__main__':
